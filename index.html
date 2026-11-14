@@ -28,6 +28,9 @@
           <span>💖 我的收藏</span>
           <span class="badge-count" id="favCountBadge">0</span>
         </button>
+        <button type="button" class="nav-btn add-store-nav-btn" id="openAddStoreBtn">
+          <span>➕ 新增店家</span>
+        </button>
       </nav>
     </div>
   </header>
@@ -85,7 +88,24 @@
             <span class="search-icon" aria-hidden="true">🔍</span>
             <input type="search" id="searchInput" placeholder="快速搜尋店名或餐點..." aria-label="搜尋店家" />
           </div>
-          <div class="result-summary" id="resultSummary">載入中...</div>
+          <div class="meta-right">
+            <div class="result-summary" id="resultSummary">載入中...</div>
+            <a
+              id="exploreMoreMapsLink"
+              class="explore-maps-btn"
+              href="https://www.google.com/maps"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="在 Google 地圖查看校區附近更多營業中店家"
+            >
+              🗺️ 地圖找更多 ↗
+            </a>
+          </div>
+        </div>
+
+        <div class="hidden-bar" id="hiddenBar" hidden>
+          <span id="hiddenBarText"></span>
+          <button type="button" class="restore-btn" id="restoreHiddenBtn">全部還原</button>
         </div>
       </div>
 
@@ -112,9 +132,83 @@
 
   <footer class="site-footer">
     <div class="container">
-      <p>中科大六日午餐小地圖 · 僅顯示當日有營業之 10 分鐘步行圈店家（不含點心）</p>
+      <p>中科大六日午餐小地圖 · 可隨時按「➕ 新增店家」擴充口袋名單，或按「🚫」回報歇業／超預算店家</p>
     </div>
   </footer>
+
+  <!-- 新增店家 Modal -->
+  <div class="modal-backdrop" id="addStoreModal" hidden role="dialog" aria-modal="true" aria-labelledby="addStoreTitle">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="addStoreTitle">➕ 推薦新店家</h3>
+        <button type="button" class="icon-action-btn" id="closeAddStoreBtn" aria-label="關閉視窗">✕</button>
+      </div>
+      <form id="addStoreForm" class="modal-form">
+        <div class="form-grid-2">
+          <label class="field-label">
+            校區
+            <select name="campus" required>
+              <option value="sanmin">🏫 三民校區</option>
+              <option value="minsheng">🌿 民生校區</option>
+            </select>
+          </label>
+          <label class="field-label">
+            分類（不含點心）
+            <select name="category" id="newStoreCategory" required>
+              <option value="meal">🍱 150元內正餐</option>
+              <option value="drink">🧋 100元內手搖飲</option>
+            </select>
+          </label>
+        </div>
+
+        <label class="field-label">
+          店名
+          <input type="text" name="name" placeholder="例如：阿明乾麵／茶湯會" maxlength="40" required />
+        </label>
+
+        <label class="field-label">
+          地址（用來產生 Google 地圖連結）
+          <input type="text" name="address" placeholder="例如：臺中市北區三民路三段120號" maxlength="80" required />
+        </label>
+
+        <div class="form-grid-3">
+          <label class="field-label">
+            步行分鐘（≤10）
+            <input type="number" name="walkMinutes" min="1" max="10" value="5" required />
+          </label>
+          <label class="field-label">
+            最高價（元）
+            <input type="number" name="maxPrice" id="newStoreMaxPrice" min="10" max="150" value="100" required />
+          </label>
+          <label class="field-label">
+            評價（選填）
+            <input type="number" name="rating" min="1" max="5" step="0.1" value="4.5" />
+          </label>
+        </div>
+
+        <div class="form-grid-2">
+          <label class="field-label">
+            ☀️ 週六營業（留空＝公休）
+            <input type="text" name="satHours" value="11:00–14:00" placeholder="例如 11:00–14:00 或留空" />
+          </label>
+          <label class="field-label">
+            🌤️ 週日營業（留空＝公休）
+            <input type="text" name="sunHours" value="11:00–14:00" placeholder="例如 11:00–14:00 或留空" />
+          </label>
+        </div>
+
+        <label class="field-label">
+          招牌推薦（逗號分隔，最多2個）
+          <input type="text" name="highlights" placeholder="例如：滷肉飯, 貢丸湯" maxlength="40" />
+        </label>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="cancelAddStoreBtn">取消</button>
+          <button type="submit" class="btn-primary">加入清單</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- 右下角卡通笑臉小客服 -->
   <div class="chat-widget" id="chatWidget">
@@ -154,7 +248,7 @@
           placeholder="https://script.google.com/macros/s/.../exec"
         />
         <p class="settings-hint">
-          金鑰請放在 GAS 指令碼屬性（<code>OPENROUTER_API_KEY</code>）
+          金鑰請放在 GAS 指令碼屬性（<code>OPENROUTER_API_KEY</code>）；設定後也可同步大家的新增店家與留言！
         </p>
         <div class="settings-actions">
           <button type="button" class="btn-secondary" id="testGasBtn">測試連線</button>

@@ -1046,6 +1046,207 @@ html, body {
   cursor: not-allowed;
 }
 
+/* Add Store Nav, Explore More Maps, Report Closure & Modal */
+.add-store-nav-btn {
+  border-color: #ffd0b8;
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+}
+
+.add-store-nav-btn:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+}
+
+.meta-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.explore-maps-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1.5px solid #c5e8e4;
+  background: var(--teal-soft);
+  color: var(--teal-dark);
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 700;
+  transition: all 0.16s ease;
+}
+
+.explore-maps-btn:hover {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: #ffffff;
+}
+
+.hidden-bar {
+  margin-top: 10px;
+  padding: 7px 12px;
+  border-radius: 12px;
+  background: #fff5f5;
+  border: 1.5px solid #ffd6d6;
+  color: #a61e4d;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.hidden-bar[hidden] {
+  display: none;
+}
+
+.restore-btn {
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid #f59f9f;
+  background: #ffffff;
+  color: #a61e4d;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.restore-btn:hover {
+  background: #ffe3e3;
+}
+
+.card-action-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.report-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: #fffcf8;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.report-btn:hover {
+  border-color: #ffa8a8;
+  background: #fff0f0;
+  color: #c92a2a;
+}
+
+.badge-custom {
+  background: #f3e8ff;
+  color: #7048e8;
+}
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(74, 55, 40, 0.45);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.modal-backdrop[hidden] {
+  display: none;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 460px;
+  background: var(--surface);
+  border: 2.5px solid var(--text);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 18px 20px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.modal-head h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.form-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.field-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.field-label input,
+.field-label select {
+  padding: 7px 10px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: #fffcf8;
+  color: var(--text);
+  font-size: 0.84rem;
+  font-family: inherit;
+  outline: none;
+}
+
+.field-label input:focus,
+.field-label select:focus {
+  border-color: var(--primary);
+  background: #ffffff;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+
 @media (max-width: 980px) {
   .store-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1054,7 +1255,9 @@ html, body {
 
 @media (max-width: 640px) {
   .campus-switcher,
-  .store-grid {
+  .store-grid,
+  .form-grid-2,
+  .form-grid-3 {
     grid-template-columns: 1fr;
   }
 

@@ -4,6 +4,8 @@
   const STORAGE_KEYS = {
     favorites: 'nutc_lunch_favorites_v1',
     comments: 'nutc_lunch_comments_v1',
+    customStores: 'nutc_lunch_custom_stores_v1',
+    reportedClosed: 'nutc_lunch_reported_closed_v1',
     gasUrl: 'nutc_lunch_gas_url_v1'
   };
 
@@ -17,6 +19,11 @@
     favCampusFilter: 'all',
     favorites: loadJson(STORAGE_KEYS.favorites, []),
     comments: loadJson(STORAGE_KEYS.comments, {}),
+    customStores: loadJson(STORAGE_KEYS.customStores, []),
+    reportedClosed: loadJson(STORAGE_KEYS.reportedClosed, []),
+    remoteCustomStores: [],
+    remoteReportedClosed: [],
+    remoteComments: {},
     openComments: new Set(),
     gasUrl: localStorage.getItem(STORAGE_KEYS.gasUrl) || '',
     chatHistory: [],
@@ -32,7 +39,21 @@
   const favoritesGrid = document.getElementById('favoritesGrid');
   const resultSummary = document.getElementById('resultSummary');
   const searchInput = document.getElementById('searchInput');
+  const exploreMoreMapsLink = document.getElementById('exploreMoreMapsLink');
+  const hiddenBar = document.getElementById('hiddenBar');
+  const hiddenBarText = document.getElementById('hiddenBarText');
+  const restoreHiddenBtn = document.getElementById('restoreHiddenBtn');
 
+  // Add Store Modal Elements
+  const openAddStoreBtn = document.getElementById('openAddStoreBtn');
+  const addStoreModal = document.getElementById('addStoreModal');
+  const closeAddStoreBtn = document.getElementById('closeAddStoreBtn');
+  const cancelAddStoreBtn = document.getElementById('cancelAddStoreBtn');
+  const addStoreForm = document.getElementById('addStoreForm');
+  const newStoreCategory = document.getElementById('newStoreCategory');
+  const newStoreMaxPrice = document.getElementById('newStoreMaxPrice');
+
+  // Chat Widget Elements
   const chatPanel = document.getElementById('chatPanel');
   const smileyLauncher = document.getElementById('smileyLauncher');
   const closeChatBtn = document.getElementById('closeChatBtn');
@@ -66,6 +87,14 @@
     localStorage.setItem(STORAGE_KEYS.comments, JSON.stringify(state.comments));
   }
 
+  function saveCustomStores() {
+    localStorage.setItem(STORAGE_KEYS.customStores, JSON.stringify(state.customStores));
+  }
+
+  function saveReportedClosed() {
+    localStorage.setItem(STORAGE_KEYS.reportedClosed, JSON.stringify(state.reportedClosed));
+  }
+
   function escapeHtml(str) {
     return String(str)
       .replace(/&/g, '&amp;')
@@ -85,6 +114,76 @@
     return `${mm}/${dd} ${hh}:${min}`;
   }
 
+  function getAllStores() {
+    const merged = [...STORES];
+    const seenIds = new Set(STORES.map((s) => s.id));
+    [...state.remoteCustomStores, ...state.customStores].forEach((s) => {
+      if (s && s.id && !seenIds.has(s.id)) {
+        seenIds.add(s.id);
+        merged.push({
+          ...s,
+          isCustom: true,
+          mapsUrl: s.mapsUrl || buildGoogleMapsUrl(s.name, s.address)
+        });
+      }
+    });
+    return merged;
+  }
+
+  function getReportedSet() {
+    return new Set([...state.reportedClosed, ...state.remoteReportedClosed]);
+  }
+
+  function getCommentsForStore(storeId) {
+    const localList = state.comments[storeId] || [];
+    const remoteList = state.remoteComments[storeId] || [];
+    const seen = new Set();
+    const combined = [];
+    [...localList, ...remoteList].forEach((c) => {
+      if (c && c.id && !seen.has(c.id)) {
+        seen.add(c.id);
+        combined.push(c);
+      }
+    });
+    combined.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    return combined;
+  }
+
+  async function postGasAction(payload) {
+    if (!state.gasUrl) return null;
+    try {
+      const res = await fetch(state.gasUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        redirect: 'follow',
+        body: JSON.stringify(payload)
+      });
+      return await res.json();
+    } catch {
+      return null;
+    }
+  }
+
+  async function syncFromGas() {
+    if (!state.gasUrl) return;
+    try {
+      const sep = state.gasUrl.includes('?') ? '&' : '?';
+      const res = await fetch(`${state.gasUrl}${sep}action=getCommunity`, {
+        method: 'GET',
+        redirect: 'follow'
+      });
+      const data = await res.json();
+      if (data && data.ok) {
+        state.remoteCustomStores = Array.isArray(data.customStores) ? data.customStores : [];
+        state.remoteReportedClosed = Array.isArray(data.reportedIds) ? data.reportedIds : [];
+        state.remoteComments = data.comments && typeof data.comments === 'object' ? data.comments : {};
+        renderCurrentView();
+      }
+    } catch {
+      // 靜默忽略，保持使用 localStorage
+    }
+  }
+
   function updateFavBadge() {
     favCountBadge.textContent = String(state.favorites.length);
   }
@@ -100,6 +199,26 @@
       state.favorites = [...state.favorites, storeId];
     }
     saveFavorites();
+    renderCurrentView();
+  }
+
+  function reportStoreClosed(storeId, storeName) {
+    if (!window.confirm(`確定要將「${storeName}」標記為歇業或超預算並從清單隱藏嗎？\n（之後可隨時按「全部還原」）`)) {
+      return;
+    }
+    if (!state.reportedClosed.includes(storeId)) {
+      state.reportedClosed = [...state.reportedClosed, storeId];
+      saveReportedClosed();
+    }
+    postGasAction({ action: 'reportStore', storeId });
+    renderCurrentView();
+  }
+
+  function restoreHiddenStores() {
+    state.reportedClosed = [];
+    state.remoteReportedClosed = [];
+    saveReportedClosed();
+    postGasAction({ action: 'unreportAll' });
     renderCurrentView();
   }
 
@@ -126,20 +245,27 @@
     state.comments[storeId] = [newComment, ...existing];
     state.openComments.add(storeId);
     saveComments();
+    postGasAction({ action: 'addComment', storeId, comment: newComment });
     renderCurrentView();
   }
 
   function deleteComment(storeId, commentId) {
     const existing = state.comments[storeId] || [];
     state.comments[storeId] = existing.filter((c) => c.id !== commentId);
+    if (state.remoteComments[storeId]) {
+      state.remoteComments[storeId] = state.remoteComments[storeId].filter((c) => c.id !== commentId);
+    }
     saveComments();
+    postGasAction({ action: 'deleteComment', storeId, commentId });
     renderCurrentView();
   }
 
   function getFilteredStores() {
     const keyword = state.search.trim().toLowerCase();
+    const reportedSet = getReportedSet();
 
-    const filtered = STORES.filter((store) => {
+    const filtered = getAllStores().filter((store) => {
+      if (reportedSet.has(store.id)) return false;
       if (store.campus !== state.campus) return false;
       if (store.category !== state.category) return false;
       if (store.walkMinutes > 10) return false;
@@ -150,7 +276,7 @@
       if (!dayHours || !dayHours.open) return false;
 
       if (keyword) {
-        const haystack = [store.name, store.address, ...store.highlights].join(' ').toLowerCase();
+        const haystack = [store.name, store.address, ...(store.highlights || [])].join(' ').toLowerCase();
         if (!haystack.includes(keyword)) return false;
       }
 
@@ -171,7 +297,7 @@
 
   function renderStoreCard(store, options = { showCampusBadge: false, activeDay: state.day }) {
     const fav = isFavorite(store.id);
-    const comments = state.comments[store.id] || [];
+    const comments = getCommentsForStore(store.id);
     const isCommentsOpen = state.openComments.has(store.id);
     const campusLabel = CAMPUS_INFO[store.campus]?.name || '';
 
@@ -212,17 +338,31 @@
             ${options.showCampusBadge ? `<span class="badge badge-campus">${escapeHtml(campusLabel)}</span>` : ''}
             ${categoryBadge}
             <span class="badge badge-price">${escapeHtml(store.priceRange)}</span>
+            ${store.isCustom ? '<span class="badge badge-custom">自訂</span>' : ''}
           </div>
-          <button
-            type="button"
-            class="fav-btn ${fav ? 'is-fav' : ''}"
-            data-action="toggle-fav"
-            data-store-id="${escapeHtml(store.id)}"
-            aria-label="${fav ? '取消收藏' : '加入收藏'} ${escapeHtml(store.name)}"
-            title="${fav ? '取消收藏' : '加入收藏'}"
-          >
-            ${fav ? '♥' : '♡'}
-          </button>
+          <div class="card-action-group">
+            <button
+              type="button"
+              class="report-btn"
+              data-action="report-closed"
+              data-store-id="${escapeHtml(store.id)}"
+              data-store-name="${escapeHtml(store.name)}"
+              title="回報已歇業／超過預算並隱藏"
+              aria-label="回報 ${escapeHtml(store.name)} 歇業或超預算"
+            >
+              🚫
+            </button>
+            <button
+              type="button"
+              class="fav-btn ${fav ? 'is-fav' : ''}"
+              data-action="toggle-fav"
+              data-store-id="${escapeHtml(store.id)}"
+              aria-label="${fav ? '取消收藏' : '加入收藏'} ${escapeHtml(store.name)}"
+              title="${fav ? '取消收藏' : '加入收藏'}"
+            >
+              ${fav ? '♥' : '♡'}
+            </button>
+          </div>
         </div>
 
         <a
@@ -236,13 +376,13 @@
         </a>
 
         <div class="store-quick-stats">
-          <span class="stat-chip stat-rating">⭐ ${store.rating.toFixed(1)}</span>
+          <span class="stat-chip stat-rating">⭐ ${Number(store.rating).toFixed(1)}</span>
           <span class="stat-chip stat-distance">🚶 ${store.walkMinutes}分 (${store.distanceMeters}m)</span>
           <span class="stat-chip stat-hours">🕒 ${escapeHtml(hoursText)}</span>
         </div>
 
         <div class="store-highlights">
-          ${store.highlights.map((h) => `<span class="highlight-chip">${escapeHtml(h)}</span>`).join('')}
+          ${(store.highlights || []).map((h) => `<span class="highlight-chip">${escapeHtml(h)}</span>`).join('')}
         </div>
 
         <div class="store-actions">
@@ -296,18 +436,27 @@
 
   function renderExplore() {
     const stores = getFilteredStores();
-    const campusName = CAMPUS_INFO[state.campus].name;
+    const campusObj = CAMPUS_INFO[state.campus];
     const dayText = state.day === 'sat' ? '週六' : '週日';
     const catText = state.category === 'meal' ? '正餐' : '手搖飲';
 
-    resultSummary.textContent = `${campusName}・${dayText}營業中・${catText} ${stores.length} 間`;
+    resultSummary.textContent = `${campusObj.name}・${dayText}營業中・${catText} ${stores.length} 間`;
+    exploreMoreMapsLink.href = state.category === 'meal' ? campusObj.nearbyMealMapsUrl : campusObj.nearbyDrinkMapsUrl;
+
+    const reportedCount = getReportedSet().size;
+    if (reportedCount > 0) {
+      hiddenBar.hidden = false;
+      hiddenBarText.textContent = `已隱藏 ${reportedCount} 間回報歇業／超預算的店家`;
+    } else {
+      hiddenBar.hidden = true;
+    }
 
     if (stores.length === 0) {
       storeGrid.innerHTML = `
         <div class="empty-state">
           <div class="empty-state-icon">🍙</div>
           <h3>沒有符合條件的店家</h3>
-          <p>試著清除搜尋字詞或切換週六／週日看看！</p>
+          <p>可以點「➕ 新增店家」或按「🗺️ 地圖找更多」探索周邊美食！</p>
         </div>
       `;
       return;
@@ -317,7 +466,9 @@
   }
 
   function renderFavorites() {
-    const favStores = STORES.filter((s) => {
+    const reportedSet = getReportedSet();
+    const favStores = getAllStores().filter((s) => {
+      if (reportedSet.has(s.id)) return false;
       if (!isFavorite(s.id)) return false;
       if (state.favCampusFilter !== 'all' && s.campus !== state.favCampusFilter) return false;
       return true;
@@ -362,6 +513,7 @@
 
   navExplore.addEventListener('click', () => switchView('explore'));
   navFavorites.addEventListener('click', () => switchView('favorites'));
+  restoreHiddenBtn.addEventListener('click', restoreHiddenStores);
 
   document.querySelectorAll('.campus-card').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -421,6 +573,12 @@
       return;
     }
 
+    const reportBtn = e.target.closest('[data-action="report-closed"]');
+    if (reportBtn) {
+      reportStoreClosed(reportBtn.dataset.storeId, reportBtn.dataset.storeName);
+      return;
+    }
+
     const commentToggleBtn = e.target.closest('[data-action="toggle-comments"]');
     if (commentToggleBtn) {
       toggleCommentDrawer(commentToggleBtn.dataset.storeId);
@@ -447,6 +605,95 @@
   storeGrid.addEventListener('submit', handleGridSubmit);
   favoritesGrid.addEventListener('click', handleGridClick);
   favoritesGrid.addEventListener('submit', handleGridSubmit);
+
+  // ==================== Add Custom Store Modal ====================
+  function openAddStoreModal() {
+    addStoreForm.elements.campus.value = state.campus;
+    addStoreForm.elements.category.value = state.category;
+    updateNewStorePriceCap();
+    addStoreModal.hidden = false;
+    addStoreForm.elements.name.focus();
+  }
+
+  function closeAddStoreModal() {
+    addStoreModal.hidden = true;
+  }
+
+  function updateNewStorePriceCap() {
+    const isMeal = newStoreCategory.value === 'meal';
+    newStoreMaxPrice.max = isMeal ? '150' : '100';
+    if (Number(newStoreMaxPrice.value) > Number(newStoreMaxPrice.max)) {
+      newStoreMaxPrice.value = newStoreMaxPrice.max;
+    }
+  }
+
+  newStoreCategory.addEventListener('change', updateNewStorePriceCap);
+  openAddStoreBtn.addEventListener('click', openAddStoreModal);
+  closeAddStoreBtn.addEventListener('click', closeAddStoreModal);
+  cancelAddStoreBtn.addEventListener('click', closeAddStoreModal);
+  addStoreModal.addEventListener('click', (e) => {
+    if (e.target === addStoreModal) closeAddStoreModal();
+  });
+
+  addStoreForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const f = addStoreForm.elements;
+    const campus = f.campus.value;
+    const category = f.category.value;
+    const name = f.name.value.trim();
+    const address = f.address.value.trim();
+    const walkMinutes = Math.min(10, Math.max(1, Number(f.walkMinutes.value) || 5));
+    const cap = category === 'meal' ? 150 : 100;
+    const maxPrice = Math.min(cap, Math.max(10, Number(f.maxPrice.value) || cap));
+    const rating = Math.min(5, Math.max(1, Number(f.rating.value) || 4.5));
+    const satText = f.satHours.value.trim();
+    const sunText = f.sunHours.value.trim();
+    const highlightsRaw = f.highlights.value
+      .split(/[,，、]/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 2);
+
+    const newStore = {
+      id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      campus,
+      category,
+      name,
+      address,
+      distanceMeters: walkMinutes * 75,
+      walkMinutes,
+      rating,
+      priceRange: `≤ $${maxPrice}`,
+      maxPrice,
+      highlights: highlightsRaw.length > 0 ? highlightsRaw : [category === 'meal' ? '平價正餐' : '手搖飲'],
+      hours: {
+        sat: satText ? { open: true, text: satText } : { open: false, text: '週六公休' },
+        sun: sunText ? { open: true, text: sunText } : { open: false, text: '週日公休' }
+      },
+      isCustom: true,
+      mapsUrl: buildGoogleMapsUrl(name, address)
+    };
+
+    state.customStores = [newStore, ...state.customStores];
+    saveCustomStores();
+    postGasAction({ action: 'addStore', store: newStore });
+
+    // 自動切換到剛新增的校區與分類方便立刻看到
+    state.campus = campus;
+    state.category = category;
+    document.querySelectorAll('.campus-card').forEach((b) => {
+      const active = b.dataset.campus === campus;
+      b.classList.toggle('active', active);
+      b.setAttribute('aria-selected', String(active));
+    });
+    document.querySelectorAll('[data-category]').forEach((b) => {
+      b.classList.toggle('active', b.dataset.category === category);
+    });
+
+    addStoreForm.reset();
+    closeAddStoreModal();
+    switchView('explore');
+  });
 
   // ==================== Cartoon Smiley Chat Widget & GAS Integration ====================
   function updateGasStatusUI() {
@@ -477,15 +724,18 @@
   function buildSystemContext() {
     const campusName = CAMPUS_INFO[state.campus].name;
     const dayName = state.day === 'sat' ? '週六中午' : '週日中午';
-    const openStores = STORES.filter((s) => s.campus === state.campus && s.hours[state.day]?.open);
+    const reportedSet = getReportedSet();
+    const allStores = getAllStores().filter((s) => !reportedSet.has(s.id));
+    const openStores = allStores.filter((s) => s.campus === state.campus && s.hours[state.day]?.open);
     const storeLines = openStores
       .map((s) => {
         const type = s.category === 'meal' ? '正餐' : '手搖飲';
-        return `- [${type}] ${s.name}｜${s.priceRange}｜${s.rating}★｜步行${s.walkMinutes}分(${s.distanceMeters}m)｜${s.hours[state.day].text}｜${s.highlights.join('、')}`;
+        return `- [${type}] ${s.name}｜${s.priceRange}｜${s.rating}★｜步行${s.walkMinutes}分(${s.distanceMeters}m)｜${s.hours[state.day].text}｜${(s.highlights || []).join('、')}`;
       })
       .join('\n');
 
-    const closedToday = STORES.filter((s) => s.campus === state.campus && !s.hours[state.day]?.open)
+    const closedToday = allStores
+      .filter((s) => s.campus === state.campus && !s.hours[state.day]?.open)
       .map((s) => s.name)
       .join('、');
 
@@ -527,6 +777,7 @@
         },
         redirect: 'follow',
         body: JSON.stringify({
+          action: 'chat',
           messages: nextMessages,
           systemContext: buildSystemContext()
         })
@@ -593,7 +844,8 @@
     state.gasUrl = val;
     if (val) {
       localStorage.setItem(STORAGE_KEYS.gasUrl, val);
-      setSettingsFeedback('已儲存 GAS 網址！', true);
+      setSettingsFeedback('已儲存 GAS 網址！正在同步資料...', true);
+      syncFromGas();
     } else {
       localStorage.removeItem(STORAGE_KEYS.gasUrl);
       setSettingsFeedback('已清除 GAS 網址。', true);
@@ -637,4 +889,5 @@
   updateFavBadge();
   updateGasStatusUI();
   renderCurrentView();
+  syncFromGas();
 })();
