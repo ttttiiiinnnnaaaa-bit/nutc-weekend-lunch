@@ -17,12 +17,12 @@
     favCampusFilter: 'all',
     favorites: loadJson(STORAGE_KEYS.favorites, []),
     comments: loadJson(STORAGE_KEYS.comments, {}),
+    openComments: new Set(),
     gasUrl: localStorage.getItem(STORAGE_KEYS.gasUrl) || '',
     chatHistory: [],
     isSendingChat: false
   };
 
-  // DOM Elements
   const navExplore = document.getElementById('navExplore');
   const navFavorites = document.getElementById('navFavorites');
   const favCountBadge = document.getElementById('favCountBadge');
@@ -33,7 +33,6 @@
   const resultSummary = document.getElementById('resultSummary');
   const searchInput = document.getElementById('searchInput');
 
-  // Chat Widget Elements
   const chatPanel = document.getElementById('chatPanel');
   const smileyLauncher = document.getElementById('smileyLauncher');
   const closeChatBtn = document.getElementById('closeChatBtn');
@@ -104,10 +103,19 @@
     renderCurrentView();
   }
 
+  function toggleCommentDrawer(storeId) {
+    if (state.openComments.has(storeId)) {
+      state.openComments.delete(storeId);
+    } else {
+      state.openComments.add(storeId);
+    }
+    renderCurrentView();
+  }
+
   function addComment(storeId, author, text) {
     const cleanText = text.trim();
     if (!cleanText) return;
-    const cleanAuthor = author.trim() || '中科大同學';
+    const cleanAuthor = author.trim() || '同學';
     const existing = state.comments[storeId] || [];
     const newComment = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -116,6 +124,7 @@
       createdAt: new Date().toISOString()
     };
     state.comments[storeId] = [newComment, ...existing];
+    state.openComments.add(storeId);
     saveComments();
     renderCurrentView();
   }
@@ -133,23 +142,15 @@
     const filtered = STORES.filter((store) => {
       if (store.campus !== state.campus) return false;
       if (store.category !== state.category) return false;
-      // 嚴格遵守：10分鐘內走得到、正餐<=150、飲料<=100
       if (store.walkMinutes > 10) return false;
       if (store.category === 'meal' && store.maxPrice > 150) return false;
       if (store.category === 'drink' && store.maxPrice > 100) return false;
-      // 只要顯示該日中午有營業的店家
+
       const dayHours = store.hours[state.day];
       if (!dayHours || !dayHours.open) return false;
 
       if (keyword) {
-        const haystack = [
-          store.name,
-          store.address,
-          store.description,
-          ...store.highlights
-        ]
-          .join(' ')
-          .toLowerCase();
+        const haystack = [store.name, store.address, ...store.highlights].join(' ').toLowerCase();
         if (!haystack.includes(keyword)) return false;
       }
 
@@ -171,37 +172,22 @@
   function renderStoreCard(store, options = { showCampusBadge: false, activeDay: state.day }) {
     const fav = isFavorite(store.id);
     const comments = state.comments[store.id] || [];
+    const isCommentsOpen = state.openComments.has(store.id);
     const campusLabel = CAMPUS_INFO[store.campus]?.name || '';
+
     const categoryBadge =
       store.category === 'meal'
-        ? '<span class="badge badge-meal">🍱 正餐 ≤ $150</span>'
-        : '<span class="badge badge-drink">🧋 手搖飲 ≤ $100</span>';
+        ? '<span class="badge badge-meal">🍱 正餐</span>'
+        : '<span class="badge badge-drink">🧋 手搖飲</span>';
 
     const dayKey = options.activeDay || 'sat';
-    const dayLabel = dayKey === 'sat' ? '週六' : '週日';
-    const otherKey = dayKey === 'sat' ? 'sun' : 'sat';
-    const otherLabel = otherKey === 'sat' ? '週六' : '週日';
-
-    const primaryHours = store.hours[dayKey];
-    const otherHours = store.hours[otherKey];
-
-    const hoursHtml = options.showCampusBadge
-      ? `
-        <div class="store-hours-box">
-          <span class="hours-primary">☀️ 週六：${escapeHtml(store.hours.sat.text)}</span>
-          <span class="hours-secondary">🌤️ 週日：${escapeHtml(store.hours.sun.text)}</span>
-        </div>
-      `
-      : `
-        <div class="store-hours-box">
-          <span class="hours-primary">🟢 ${dayLabel}中午營業：${escapeHtml(primaryHours.text)}</span>
-          <span class="hours-secondary">${otherLabel}時段：${escapeHtml(otherHours.text)}</span>
-        </div>
-      `;
+    const hoursText = options.showCampusBadge
+      ? `六 ${store.hours.sat.text}｜日 ${store.hours.sun.text}`
+      : store.hours[dayKey].text;
 
     const commentsHtml =
       comments.length === 0
-        ? '<p class="comment-empty">目前還沒有留言，快來留下第一則評價吧！</p>'
+        ? '<p class="comment-empty">還沒有留言，歡迎分享心得！</p>'
         : comments
             .map(
               (c) => `
@@ -223,7 +209,7 @@
       <article class="store-card" data-store-id="${escapeHtml(store.id)}">
         <div class="store-top">
           <div class="store-badges">
-            ${options.showCampusBadge ? `<span class="badge badge-campus">🏫 ${escapeHtml(campusLabel)}</span>` : ''}
+            ${options.showCampusBadge ? `<span class="badge badge-campus">${escapeHtml(campusLabel)}</span>` : ''}
             ${categoryBadge}
             <span class="badge badge-price">${escapeHtml(store.priceRange)}</span>
           </div>
@@ -233,38 +219,31 @@
             data-action="toggle-fav"
             data-store-id="${escapeHtml(store.id)}"
             aria-label="${fav ? '取消收藏' : '加入收藏'} ${escapeHtml(store.name)}"
-            title="${fav ? '取消個人收藏' : '加入個人收藏'}"
+            title="${fav ? '取消收藏' : '加入收藏'}"
           >
             ${fav ? '♥' : '♡'}
           </button>
         </div>
 
-        <div class="store-title-row">
-          <a
-            class="store-name-link"
-            href="${escapeHtml(store.mapsUrl)}"
-            target="_blank"
-            rel="noopener noreferrer"
-            title="在 Google 地圖開啟 ${escapeHtml(store.name)}"
-          >
-            ${escapeHtml(store.name)}
-          </a>
+        <a
+          class="store-name-link"
+          href="${escapeHtml(store.mapsUrl)}"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="${escapeHtml(store.address)}"
+        >
+          ${escapeHtml(store.name)}
+        </a>
+
+        <div class="store-quick-stats">
+          <span class="stat-chip stat-rating">⭐ ${store.rating.toFixed(1)}</span>
+          <span class="stat-chip stat-distance">🚶 ${store.walkMinutes}分 (${store.distanceMeters}m)</span>
+          <span class="stat-chip stat-hours">🕒 ${escapeHtml(hoursText)}</span>
         </div>
-
-        <div class="store-stats">
-          <span class="stat-rating">⭐ Google 評價 ${store.rating.toFixed(1)}</span>
-          <span class="stat-distance">🚶 距大門約 ${store.distanceMeters}m（步行 ${store.walkMinutes} 分鐘）</span>
-        </div>
-
-        ${hoursHtml}
-
-        <p class="store-desc">${escapeHtml(store.description)}</p>
 
         <div class="store-highlights">
-          ${store.highlights.map((h) => `<span class="highlight-chip"># ${escapeHtml(h)}</span>`).join('')}
+          ${store.highlights.map((h) => `<span class="highlight-chip">${escapeHtml(h)}</span>`).join('')}
         </div>
-
-        <div class="store-address">📍 ${escapeHtml(store.address)}</div>
 
         <div class="store-actions">
           <a
@@ -273,14 +252,20 @@
             target="_blank"
             rel="noopener noreferrer"
           >
-            🗺️ 前往 Google Map 此店家 ↗
+            📍 Google 地圖 ↗
           </a>
-          <span class="comment-toggle-btn" aria-label="留言數量">
-            💬 店家留言 (${comments.length})
-          </span>
+          <button
+            type="button"
+            class="comment-toggle-btn ${isCommentsOpen ? 'open' : ''}"
+            data-action="toggle-comments"
+            data-store-id="${escapeHtml(store.id)}"
+            aria-expanded="${String(isCommentsOpen)}"
+          >
+            💬 留言 (${comments.length})
+          </button>
         </div>
 
-        <div class="comments-section">
+        <div class="comments-section" ${isCommentsOpen ? '' : 'hidden'}>
           <div class="comments-list">
             ${commentsHtml}
           </div>
@@ -290,18 +275,18 @@
                 type="text"
                 name="author"
                 class="comment-author-input"
-                placeholder="你的暱稱"
-                maxlength="20"
+                placeholder="暱稱"
+                maxlength="16"
               />
               <input
                 type="text"
                 name="text"
                 class="comment-text-input"
-                placeholder="在店家下面留言（例如：推哪一道、排隊狀況...）"
-                maxlength="200"
+                placeholder="寫下留言或推薦餐點..."
+                maxlength="180"
                 required
               />
-              <button type="submit" class="comment-submit-btn">留言</button>
+              <button type="submit" class="comment-submit-btn">送出</button>
             </div>
           </form>
         </div>
@@ -312,18 +297,17 @@
   function renderExplore() {
     const stores = getFilteredStores();
     const campusName = CAMPUS_INFO[state.campus].name;
-    const dayText = state.day === 'sat' ? '週六中午' : '週日中午';
-    const catText = state.category === 'meal' ? '150元內正餐' : '100元內手搖飲';
-    const sortText = state.sort === 'rating' ? '評價由高到低' : '距離由近到遠';
+    const dayText = state.day === 'sat' ? '週六' : '週日';
+    const catText = state.category === 'meal' ? '正餐' : '手搖飲';
 
-    resultSummary.textContent = `${campusName}｜${dayText}營業中｜${catText}：共 ${stores.length} 間（${sortText}）`;
+    resultSummary.textContent = `${campusName}・${dayText}營業中・${catText} ${stores.length} 間`;
 
     if (stores.length === 0) {
       storeGrid.innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-icon">🍽️</div>
-          <h3>找不到符合條件的營業店家</h3>
-          <p>可以試著清除搜尋關鍵字，或切換週六／週日與正餐／飲料分類查看。</p>
+          <div class="empty-state-icon">🍙</div>
+          <h3>沒有符合條件的店家</h3>
+          <p>試著清除搜尋字詞或切換週六／週日看看！</p>
         </div>
       `;
       return;
@@ -343,9 +327,9 @@
       favoritesGrid.innerHTML = `
         <div class="empty-state">
           <div class="empty-state-icon">🤍</div>
-          <h3>目前還沒有收藏店家</h3>
-          <p>回到「探索午餐」頁面，點擊店家右上角的 ♡ 愛心按鈕即可加入個人收藏！</p>
-          <button type="button" class="btn-primary" id="backToExploreBtn">去逛逛午餐地圖</button>
+          <h3>還沒有收藏店家喔</h3>
+          <p>點擊店家卡片右上角的 ♡ 愛心，就能把想吃的收進來！</p>
+          <button type="button" class="btn-primary" id="backToExploreBtn">回去逛美食</button>
         </div>
       `;
       const backBtn = document.getElementById('backToExploreBtn');
@@ -376,11 +360,9 @@
     renderCurrentView();
   }
 
-  // Event Listeners: Top Nav
   navExplore.addEventListener('click', () => switchView('explore'));
   navFavorites.addEventListener('click', () => switchView('favorites'));
 
-  // Event Listeners: Campus Switcher
   document.querySelectorAll('.campus-card').forEach((btn) => {
     btn.addEventListener('click', () => {
       const campus = btn.dataset.campus;
@@ -395,7 +377,6 @@
     });
   });
 
-  // Event Listeners: Day, Category, Sort Pills
   document.querySelectorAll('[data-day]').forEach((btn) => {
     btn.addEventListener('click', () => {
       state.day = btn.dataset.day;
@@ -433,11 +414,16 @@
     renderExplore();
   });
 
-  // Delegated Events for Store Cards (Favorite & Comment Delete & Comment Submit)
   function handleGridClick(e) {
     const favBtn = e.target.closest('[data-action="toggle-fav"]');
     if (favBtn) {
       toggleFavorite(favBtn.dataset.storeId);
+      return;
+    }
+
+    const commentToggleBtn = e.target.closest('[data-action="toggle-comments"]');
+    if (commentToggleBtn) {
+      toggleCommentDrawer(commentToggleBtn.dataset.storeId);
       return;
     }
 
@@ -495,7 +481,7 @@
     const storeLines = openStores
       .map((s) => {
         const type = s.category === 'meal' ? '正餐' : '手搖飲';
-        return `- [${type}] ${s.name}｜${s.priceRange}｜評價 ${s.rating}★｜距大門 ${s.distanceMeters}m (步行${s.walkMinutes}分)｜營業時間 ${s.hours[state.day].text}｜推薦：${s.highlights.join('、')}`;
+        return `- [${type}] ${s.name}｜${s.priceRange}｜${s.rating}★｜步行${s.walkMinutes}分(${s.distanceMeters}m)｜${s.hours[state.day].text}｜${s.highlights.join('、')}`;
       })
       .join('\n');
 
@@ -504,9 +490,9 @@
       .join('、');
 
     return [
-      '你是「國立臺中科技大學六日午餐小客服」，語氣親切活潑，使用繁體中文回答，簡潔實用。',
-      `使用者目前瀏覽：${campusName}（大門：${CAMPUS_INFO[state.campus].gateAddress}），時段：${dayName}。`,
-      '原則：推薦 10 分鐘內走得到的店家，正餐 150 元內、手搖飲 100 元內，不要推薦點心。',
+      '你是「國立臺中科技大學六日午餐小客服」，語氣可愛溫馨親切，使用繁體中文回答，簡潔實用。',
+      `使用者目前瀏覽：${campusName}（${CAMPUS_INFO[state.campus].gateAddress}），時段：${dayName}。`,
+      '原則：推薦 10 分鐘內走得到的店家，正餐 150 元內、手搖飲 100 元內，不推薦點心。',
       `${campusName}在${dayName}有營業的店家清單：\n${storeLines}`,
       closedToday ? `${campusName}在${dayName}公休的店家：${closedToday}` : ''
     ]
@@ -520,7 +506,7 @@
 
     if (!state.gasUrl) {
       appendChatMessage('user', trimmed);
-      appendChatMessage('bot', '請先點擊右上角的「⚙️ 設定」，填入您部署好的 Google Apps Script (GAS) 網址並儲存，才能連線到 OpenRouter AI 小客服喔！');
+      appendChatMessage('bot', '請先點右上角「⚙️ 設定」填入 GAS 部署網址並儲存，我才能連線幫忙推薦喔 😊');
       chatSettings.hidden = false;
       gasUrlInput.focus();
       return;
@@ -529,12 +515,11 @@
     state.isSendingChat = true;
     chatSendBtn.disabled = true;
     appendChatMessage('user', trimmed);
-    const loadingEl = appendChatMessage('bot', '小客服正在思考推薦中...', true);
+    const loadingEl = appendChatMessage('bot', '小客服思考中...', true);
 
     const nextMessages = [...state.chatHistory, { role: 'user', content: trimmed }];
 
     try {
-      // 使用 text/plain;charset=utf-8 避免觸發 GAS 不支援的 CORS Preflight (OPTIONS)
       const res = await fetch(state.gasUrl, {
         method: 'POST',
         headers: {
@@ -559,7 +544,6 @@
         throw new Error(data.error || 'OpenRouter API 回傳失敗');
       }
 
-      // 依照 OpenRouter 多輪對話規範，完整保留 assistant 的 content 與 reasoning_details
       const assistantMsg = {
         role: 'assistant',
         content: data.message.content || ''
@@ -573,7 +557,7 @@
       loadingEl.textContent = assistantMsg.content || '（AI 未回傳文字內容）';
     } catch (err) {
       loadingEl.classList.remove('loading');
-      loadingEl.textContent = `連線失敗：${err.message}\n請檢查 GAS 網址是否正確，以及是否已將部署權限設為「所有人 (Anyone)」。`;
+      loadingEl.textContent = `連線失敗：${err.message}\n請確認 GAS 網址正確且部署權限為「所有人」。`;
     } finally {
       state.isSendingChat = false;
       chatSendBtn.disabled = false;
@@ -603,13 +587,13 @@
   saveGasBtn.addEventListener('click', () => {
     const val = gasUrlInput.value.trim();
     if (val && !/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec/.test(val)) {
-      setSettingsFeedback('網址格式看起來不太對，應為 https://script.google.com/macros/s/.../exec', false);
+      setSettingsFeedback('網址格式應為 https://script.google.com/macros/s/.../exec', false);
       return;
     }
     state.gasUrl = val;
     if (val) {
       localStorage.setItem(STORAGE_KEYS.gasUrl, val);
-      setSettingsFeedback('已儲存 GAS 網址！現在可以直接跟小客服對話了。', true);
+      setSettingsFeedback('已儲存 GAS 網址！', true);
     } else {
       localStorage.removeItem(STORAGE_KEYS.gasUrl);
       setSettingsFeedback('已清除 GAS 網址。', true);
@@ -623,14 +607,14 @@
       setSettingsFeedback('請先填入 GAS 網址再測試。', false);
       return;
     }
-    setSettingsFeedback('正在測試連線...', true);
+    setSettingsFeedback('測試連線中...', true);
     try {
       const res = await fetch(val, { method: 'GET', redirect: 'follow' });
       const data = await res.json();
       if (data && data.ok) {
-        setSettingsFeedback(`連線成功！GAS 狀態：${data.status || 'ready'}`, true);
+        setSettingsFeedback(`連線成功！${data.status || 'ready'}`, true);
       } else {
-        setSettingsFeedback(`連線有回應但狀態異常：${JSON.stringify(data)}`, false);
+        setSettingsFeedback(`回應異常：${JSON.stringify(data)}`, false);
       }
     } catch (err) {
       setSettingsFeedback(`測試失敗：${err.message}`, false);
@@ -650,7 +634,6 @@
     });
   });
 
-  // Initial render
   updateFavBadge();
   updateGasStatusUI();
   renderCurrentView();

@@ -3,29 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>中科大六日午餐地圖｜三民＆民生校區 10 分鐘步行美食</title>
+  <title>中科大六日午餐小地圖 🍱</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header class="site-header">
     <div class="container header-inner">
       <div class="brand">
-        <span class="brand-badge" aria-hidden="true">🍱</span>
+        <span class="brand-badge" aria-hidden="true">🍙</span>
         <div>
-          <h1>中科大六日午餐地圖</h1>
-          <p class="subtitle">10 分鐘內走得到 · 150 元內正餐 · 100 元內手搖飲 · 只顯示當日營業店家</p>
+          <h1>中科大六日午餐小地圖</h1>
+          <p class="subtitle">步行 10 分內 · 正餐 ≤$150 · 手搖飲 ≤$100</p>
         </div>
       </div>
 
       <nav class="main-nav" aria-label="主導覽">
         <button type="button" class="nav-btn active" data-view="explore" id="navExplore">
-          <span>🍽️ 探索午餐</span>
+          <span>🍽️ 逛美食</span>
         </button>
         <button type="button" class="nav-btn" data-view="favorites" id="navFavorites">
-          <span>❤️ 個人收藏</span>
+          <span>💖 我的收藏</span>
           <span class="badge-count" id="favCountBadge">0</span>
         </button>
       </nav>
@@ -37,21 +37,25 @@
     <section class="campus-section" aria-label="校區選擇">
       <div class="campus-switcher" role="tablist" aria-label="切換校區">
         <button type="button" class="campus-card active" data-campus="sanmin" role="tab" aria-selected="true">
-          <div class="campus-card-top">
-            <span class="campus-tag">總校區</span>
-            <span class="campus-area">北區・一中商圈</span>
+          <span class="campus-emoji" aria-hidden="true">🏫</span>
+          <div>
+            <div class="campus-title-row">
+              <h2>三民校區</h2>
+              <span class="campus-tag">一中商圈</span>
+            </div>
+            <p>北區三民路三段 129 號</p>
           </div>
-          <h2>三民校區</h2>
-          <p>大門口：臺中市北區三民路三段 129 號</p>
         </button>
 
         <button type="button" class="campus-card" data-campus="minsheng" role="tab" aria-selected="false">
-          <div class="campus-card-top">
-            <span class="campus-tag">民生校區</span>
-            <span class="campus-area">西區・府後街／第五市場</span>
+          <span class="campus-emoji" aria-hidden="true">🌿</span>
+          <div>
+            <div class="campus-title-row">
+              <h2>民生校區</h2>
+              <span class="campus-tag">府後／第五市場</span>
+            </div>
+            <p>西區三民路一段 193 號</p>
           </div>
-          <h2>民生校區</h2>
-          <p>大門口：臺中市西區三民路一段 193 號</p>
         </button>
       </div>
     </section>
@@ -60,38 +64,26 @@
     <section id="exploreView" class="view-panel active">
       <div class="controls-panel">
         <div class="controls-row">
-          <!-- 星期選擇（六及日分開點選） -->
-          <div class="control-group">
-            <span class="control-label">營業時段</span>
-            <div class="pill-group" role="group" aria-label="選擇週六或週日中午">
-              <button type="button" class="pill-btn active" data-day="sat">☀️ 週六中午</button>
-              <button type="button" class="pill-btn" data-day="sun">🌤️ 週日中午</button>
-            </div>
+          <div class="pill-group" role="group" aria-label="選擇週六或週日中午">
+            <button type="button" class="pill-btn active" data-day="sat">☀️ 週六中午</button>
+            <button type="button" class="pill-btn" data-day="sun">🌤️ 週日中午</button>
           </div>
 
-          <!-- 正餐與飲料分開點選（不含點心） -->
-          <div class="control-group">
-            <span class="control-label">餐點分類（不含點心）</span>
-            <div class="pill-group" role="group" aria-label="正餐與飲料分開點選">
-              <button type="button" class="pill-btn category-meal active" data-category="meal">🍱 150元以內正餐</button>
-              <button type="button" class="pill-btn category-drink" data-category="drink">🧋 100元以內手搖飲</button>
-            </div>
+          <div class="pill-group" role="group" aria-label="正餐與飲料分開點選">
+            <button type="button" class="pill-btn category-meal active" data-category="meal">🍱 150元內正餐</button>
+            <button type="button" class="pill-btn category-drink" data-category="drink">🧋 100元內手搖飲</button>
           </div>
 
-          <!-- 兩種排序方式 -->
-          <div class="control-group">
-            <span class="control-label">排序方式</span>
-            <div class="pill-group" role="group" aria-label="排序方式">
-              <button type="button" class="pill-btn active" data-sort="rating">⭐ Google 評價高→低</button>
-              <button type="button" class="pill-btn" data-sort="distance">🚶 距離大門口近→遠</button>
-            </div>
+          <div class="pill-group" role="group" aria-label="排序方式">
+            <button type="button" class="pill-btn active" data-sort="rating">⭐ 評價高→低</button>
+            <button type="button" class="pill-btn" data-sort="distance">🚶 距離近→遠</button>
           </div>
         </div>
 
         <div class="controls-meta">
           <div class="search-box">
             <span class="search-icon" aria-hidden="true">🔍</span>
-            <input type="search" id="searchInput" placeholder="搜尋店名、路名或招牌品項（例如：咖哩、意麵、烏龍）..." aria-label="搜尋店家" />
+            <input type="search" id="searchInput" placeholder="快速搜尋店名或餐點..." aria-label="搜尋店家" />
           </div>
           <div class="result-summary" id="resultSummary">載入中...</div>
         </div>
@@ -104,11 +96,11 @@
     <section id="favoritesView" class="view-panel" hidden>
       <div class="favorites-header">
         <div>
-          <h2>❤️ 我的個人收藏店家</h2>
-          <p class="favorites-desc">把想吃的六日午餐與手搖飲加入愛心收藏，隨時查看位置與留言筆記。</p>
+          <h2>💖 我的收藏店家</h2>
+          <p class="favorites-desc">喜歡的六日午餐與飲料都在這裡</p>
         </div>
         <div class="pill-group" role="group" aria-label="收藏校區篩選">
-          <button type="button" class="pill-btn active" data-fav-campus="all">全部校區</button>
+          <button type="button" class="pill-btn active" data-fav-campus="all">全部</button>
           <button type="button" class="pill-btn" data-fav-campus="sanmin">三民校區</button>
           <button type="button" class="pill-btn" data-fav-campus="minsheng">民生校區</button>
         </div>
@@ -120,7 +112,7 @@
 
   <footer class="site-footer">
     <div class="container">
-      <p>國立臺中科技大學六日午餐小幫手 · 步行距離以各校區大門口為起點估算（10 分鐘內），實際營業時間以 Google 地圖與店家現場公告為準。</p>
+      <p>中科大六日午餐小地圖 · 僅顯示當日有營業之 10 分鐘步行圈店家（不含點心）</p>
     </div>
   </footer>
 
@@ -130,12 +122,12 @@
       <div class="chat-header">
         <div class="chat-header-title">
           <svg class="mini-smiley" viewBox="0 0 64 64" width="32" height="32" aria-hidden="true">
-            <circle cx="32" cy="32" r="29" fill="#FFD43B" stroke="#1E242B" stroke-width="3.5" />
-            <circle cx="22" cy="25" r="3.6" fill="#1E242B" />
-            <circle cx="42" cy="25" r="3.6" fill="#1E242B" />
-            <circle cx="16.5" cy="33" r="4" fill="#FF8787" opacity="0.7" />
-            <circle cx="47.5" cy="33" r="4" fill="#FF8787" opacity="0.7" />
-            <path d="M21 36 Q32 47 43 36" fill="none" stroke="#1E242B" stroke-width="3.5" stroke-linecap="round" />
+            <circle cx="32" cy="32" r="29" fill="#FFE066" stroke="#4A3728" stroke-width="3.5" />
+            <circle cx="22" cy="25" r="3.4" fill="#4A3728" />
+            <circle cx="42" cy="25" r="3.4" fill="#4A3728" />
+            <circle cx="16.5" cy="33" r="4.2" fill="#FF9E9E" opacity="0.8" />
+            <circle cx="47.5" cy="33" r="4.2" fill="#FF9E9E" opacity="0.8" />
+            <path d="M21 36 Q32 47 43 36" fill="none" stroke="#4A3728" stroke-width="3.5" stroke-linecap="round" />
           </svg>
           <div>
             <strong>午餐小客服</strong>
@@ -154,7 +146,7 @@
 
       <!-- GAS 設定區塊 -->
       <div class="chat-settings" id="chatSettings" hidden>
-        <label for="gasUrlInput" class="settings-label">Google Apps Script (GAS) 網頁應用程式網址</label>
+        <label for="gasUrlInput" class="settings-label">貼上 Google Apps Script (GAS) 部署網址</label>
         <input
           type="url"
           id="gasUrlInput"
@@ -162,7 +154,7 @@
           placeholder="https://script.google.com/macros/s/.../exec"
         />
         <p class="settings-hint">
-          OpenRouter API Key 請放在 GAS 的「指令碼屬性」（<code>OPENROUTER_API_KEY</code>），前端只會連線到您填入的 GAS 網址。
+          金鑰請放在 GAS 指令碼屬性（<code>OPENROUTER_API_KEY</code>）
         </p>
         <div class="settings-actions">
           <button type="button" class="btn-secondary" id="testGasBtn">測試連線</button>
@@ -174,16 +166,16 @@
       <!-- 對話訊息區 -->
       <div class="chat-messages" id="chatMessages">
         <div class="chat-msg bot">
-          哈囉！我是中科大午餐小客服 😊<br />
-          不確定週六或週日中午要吃什麼嗎？可以先點右上角 <strong>⚙️ 設定</strong> 填入你的 GAS 網址，再問我推薦喔！
+          嗨嗨～我是午餐小客服 😊<br />
+          點右上角 <strong>⚙️ 設定</strong> 貼上 GAS 網址，就能請我幫你挑午餐囉！
         </div>
       </div>
 
       <!-- 快捷提問 -->
       <div class="chat-quick-prompts" id="quickPrompts">
-        <button type="button" class="quick-chip" data-prompt="推薦我目前選擇的校區與時段，高評價又近的 150 元內正餐">🍱 推薦正餐</button>
-        <button type="button" class="quick-chip" data-prompt="幫我配一組正餐＋100元內手搖飲的午餐組合">🧋 配一組午餐</button>
-        <button type="button" class="quick-chip" data-prompt="哪幾家店週日沒開要注意？">📅 週日公休提醒</button>
+        <button type="button" class="quick-chip" data-prompt="推薦目前校區與時段，高評價又近的 150 元內正餐">🍱 推薦正餐</button>
+        <button type="button" class="quick-chip" data-prompt="幫我配一組正餐＋100元內手搖飲">🧋 幫我配一組</button>
+        <button type="button" class="quick-chip" data-prompt="哪幾家店週日沒開？">📅 週日公休</button>
       </div>
 
       <!-- 輸入列 -->
@@ -191,7 +183,7 @@
         <input
           type="text"
           id="chatInput"
-          placeholder="問小客服：今天想吃辣的或喝烏龍..."
+          placeholder="想吃什麼呢？問問小客服..."
           autocomplete="off"
           required
         />
@@ -201,21 +193,16 @@
 
     <!-- 卡通笑臉浮動按鈕 -->
     <button type="button" class="smiley-launcher" id="smileyLauncher" aria-label="開啟午餐小客服" title="點我開啟午餐小客服">
-      <svg class="smiley-face-svg" viewBox="0 0 80 80" width="62" height="62" aria-hidden="true">
-        <!-- 外框陰影圓 -->
-        <circle cx="40" cy="40" r="35" fill="#FFD43B" stroke="#1E242B" stroke-width="4" />
-        <!-- 亮面高光 -->
-        <path d="M22 18 A24 24 0 0 1 42 12" fill="none" stroke="#FFF3BF" stroke-width="4" stroke-linecap="round" />
-        <!-- 眼睛 -->
-        <ellipse cx="28" cy="32" rx="4.2" ry="5.2" fill="#1E242B" />
-        <ellipse cx="52" cy="32" rx="4.2" ry="5.2" fill="#1E242B" />
+      <svg class="smiley-face-svg" viewBox="0 0 80 80" width="64" height="64" aria-hidden="true">
+        <circle cx="40" cy="40" r="35" fill="#FFE066" stroke="#4A3728" stroke-width="4" />
+        <path d="M22 18 A24 24 0 0 1 42 12" fill="none" stroke="#FFF9DB" stroke-width="4" stroke-linecap="round" />
+        <ellipse cx="28" cy="32" rx="4" ry="5" fill="#4A3728" />
+        <ellipse cx="52" cy="32" rx="4" ry="5" fill="#4A3728" />
         <circle cx="29.4" cy="30.2" r="1.4" fill="#FFFFFF" />
         <circle cx="53.4" cy="30.2" r="1.4" fill="#FFFFFF" />
-        <!-- 腮紅 -->
-        <ellipse cx="20" cy="41" rx="5.2" ry="3.2" fill="#FF8787" opacity="0.75" />
-        <ellipse cx="60" cy="41" rx="5.2" ry="3.2" fill="#FF8787" opacity="0.75" />
-        <!-- 開心笑臉 -->
-        <path d="M25 44 Q40 59 55 44" fill="none" stroke="#1E242B" stroke-width="4.2" stroke-linecap="round" />
+        <ellipse cx="20" cy="41" rx="5.5" ry="3.4" fill="#FF9E9E" opacity="0.85" />
+        <ellipse cx="60" cy="41" rx="5.5" ry="3.4" fill="#FF9E9E" opacity="0.85" />
+        <path d="M25 44 Q40 59 55 44" fill="none" stroke="#4A3728" stroke-width="4.2" stroke-linecap="round" />
       </svg>
       <span class="launcher-label">小客服</span>
     </button>
