@@ -26,7 +26,7 @@
     remoteReportedClosed: [],
     remoteComments: {},
     openComments: new Set(),
-    gasUrl: (localStorage.getItem(STORAGE_KEYS.gasUrl) || '').trim() || DEFAULT_GAS_URL,
+    gasUrl: DEFAULT_GAS_URL,
     chatHistory: [],
     isSendingChat: false
   };
@@ -58,13 +58,6 @@
   const chatPanel = document.getElementById('chatPanel');
   const smileyLauncher = document.getElementById('smileyLauncher');
   const closeChatBtn = document.getElementById('closeChatBtn');
-  const openSettingsBtn = document.getElementById('openSettingsBtn');
-  const chatSettings = document.getElementById('chatSettings');
-  const gasUrlInput = document.getElementById('gasUrlInput');
-  const saveGasBtn = document.getElementById('saveGasBtn');
-  const testGasBtn = document.getElementById('testGasBtn');
-  const settingsFeedback = document.getElementById('settingsFeedback');
-  const gasStatusText = document.getElementById('gasStatusText');
   const chatMessages = document.getElementById('chatMessages');
   const chatWelcomeMsg = document.getElementById('chatWelcomeMsg');
   const chatForm = document.getElementById('chatForm');
@@ -1019,28 +1012,6 @@ ${strings.map((s) => `<si><t xml:space="preserve">${escapeXml(s)}</t></si>`).joi
   }
 
   // ==================== Cartoon Smiley Chat Widget & GAS Integration ====================
-  function updateGasStatusUI() {
-    gasUrlInput.value = state.gasUrl;
-    if (state.gasUrl) {
-      gasStatusText.textContent = '已設定 GAS 網址';
-      gasStatusText.classList.add('connected');
-      if (chatWelcomeMsg) {
-        chatWelcomeMsg.innerHTML = '嗨嗨～我是午餐小客服 😊<br />想吃什麼呢？直接問我或點下方按鈕就能幫你挑囉～';
-      }
-    } else {
-      gasStatusText.textContent = '尚未設定 GAS 網址';
-      gasStatusText.classList.remove('connected');
-      if (chatWelcomeMsg) {
-        chatWelcomeMsg.innerHTML = '嗨嗨～我是午餐小客服 😊<br />點右上角 <strong>⚙️ 設定</strong> 貼上 GAS 網址，就能請我幫你挑午餐囉！';
-      }
-    }
-  }
-
-  function setSettingsFeedback(msg, isOk) {
-    settingsFeedback.textContent = msg;
-    settingsFeedback.className = `settings-feedback ${isOk ? 'ok' : 'err'}`;
-  }
-
   function appendChatMessage(role, text, isLoading = false) {
     const div = document.createElement('div');
     div.className = `chat-msg ${role === 'user' ? 'user' : 'bot'}${isLoading ? ' loading' : ''}`;
@@ -1094,9 +1065,7 @@ ${strings.map((s) => `<si><t xml:space="preserve">${escapeXml(s)}</t></si>`).joi
 
     if (!state.gasUrl) {
       appendChatMessage('user', trimmed);
-      appendChatMessage('bot', '請先點右上角「⚙️ 設定」填入 GAS 部署網址並儲存，我才能連線幫忙推薦喔 😊');
-      chatSettings.hidden = false;
-      gasUrlInput.focus();
+      appendChatMessage('bot', '目前小客服暫時無法連線，請稍後再試喔 😊');
       return;
     }
 
@@ -1165,57 +1134,6 @@ ${strings.map((s) => `<si><t xml:space="preserve">${escapeXml(s)}</t></si>`).joi
     chatPanel.hidden = true;
   });
 
-  openSettingsBtn.addEventListener('click', () => {
-    chatSettings.hidden = !chatSettings.hidden;
-    settingsFeedback.textContent = '';
-    if (!chatSettings.hidden) {
-      gasUrlInput.focus();
-    }
-  });
-
-  saveGasBtn.addEventListener('click', async () => {
-    const val = gasUrlInput.value.trim();
-    if (val && !/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec/.test(val)) {
-      setSettingsFeedback('網址格式應為 https://script.google.com/macros/s/.../exec', false);
-      return;
-    }
-    if (val) {
-      state.gasUrl = val;
-      localStorage.setItem(STORAGE_KEYS.gasUrl, val);
-    } else {
-      localStorage.removeItem(STORAGE_KEYS.gasUrl);
-      state.gasUrl = DEFAULT_GAS_URL;
-    }
-    updateGasStatusUI();
-    setSettingsFeedback('儲存中，正在同步資料...', true);
-    const synced = await syncFromGas();
-    if (synced) {
-      setSettingsFeedback(val ? '已儲存 GAS 網址並完成同步 ✓' : '已恢復使用網站預設 GAS 網址並完成同步 ✓', true);
-    } else {
-      setSettingsFeedback('已儲存網址，但同步失敗（請點「測試連線」確認 GAS 權限為所有人）', false);
-    }
-  });
-
-  testGasBtn.addEventListener('click', async () => {
-    const val = gasUrlInput.value.trim();
-    if (!val) {
-      setSettingsFeedback('請先填入 GAS 網址再測試。', false);
-      return;
-    }
-    setSettingsFeedback('測試連線中...', true);
-    try {
-      const res = await fetch(val, { method: 'GET', redirect: 'follow' });
-      const data = await res.json();
-      if (data && data.ok) {
-        setSettingsFeedback(`連線成功！${data.status || 'ready'}`, true);
-      } else {
-        setSettingsFeedback(`回應異常：${JSON.stringify(data)}`, false);
-      }
-    } catch (err) {
-      setSettingsFeedback(`測試失敗：${err.message}`, false);
-    }
-  });
-
   chatForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const val = chatInput.value;
@@ -1230,7 +1148,6 @@ ${strings.map((s) => `<si><t xml:space="preserve">${escapeXml(s)}</t></si>`).joi
   });
 
   updateFavBadge();
-  updateGasStatusUI();
   renderCurrentView();
   syncFromGas();
 })();

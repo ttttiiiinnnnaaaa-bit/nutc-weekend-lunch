@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20261115k" />
+  <link rel="stylesheet" href="styles.css?v=20261115l" />
 </head>
 <body>
   <header class="site-header">
@@ -239,40 +239,17 @@
           </svg>
           <div>
             <strong>午餐小客服</strong>
-            <span class="gas-status" id="gasStatusText">尚未設定 GAS 網址</span>
           </div>
         </div>
         <div class="chat-header-actions">
-          <button type="button" class="icon-action-btn" id="openSettingsBtn" title="設定 GAS 網址" aria-label="設定 GAS 網址">
-            ⚙️ 設定
-          </button>
           <button type="button" class="icon-action-btn close-chat-btn" id="closeChatBtn" title="縮小視窗" aria-label="關閉小客服">
             ✕
           </button>
         </div>
       </div>
 
-      <!-- GAS 設定區塊 -->
-      <div class="chat-settings" id="chatSettings" hidden>
-        <label for="gasUrlInput" class="settings-label">貼上 Google Apps Script (GAS) 部署網址</label>
-        <input
-          type="url"
-          id="gasUrlInput"
-          class="settings-input"
-          placeholder="https://script.google.com/macros/s/.../exec"
-        />
-        <p class="settings-hint">
-          金鑰請放在 GAS 指令碼屬性（<code>OPENROUTER_API_KEY</code>）；設定後也可同步大家的新增店家與留言！
-        </p>
-        <div class="settings-actions">
-          <button type="button" class="btn-secondary" id="testGasBtn">測試連線</button>
-          <button type="button" class="btn-primary" id="saveGasBtn">儲存網址</button>
-        </div>
-        <div class="settings-feedback" id="settingsFeedback" aria-live="polite"></div>
-      </div>
-
       <!-- 對話訊息區 -->
-      <div class="chat-messages" id="chatMessages"><div class="chat-msg bot" id="chatWelcomeMsg">嗨嗨～我是午餐小客服 😊<br />點右上角 <strong>⚙️ 設定</strong> 貼上 GAS 網址，就能請我幫你挑午餐囉！</div></div>
+      <div class="chat-messages" id="chatMessages"><div class="chat-msg bot" id="chatWelcomeMsg">嗨嗨～我是午餐小客服 😊<br />想吃什麼呢？直接問我或點下方按鈕就能幫你挑囉～</div></div>
 
       <!-- 快捷提問 -->
       <div class="chat-quick-prompts" id="quickPrompts">
@@ -311,7 +288,7 @@
     </button>
   </div>
 
-  <script src="data.js?v=20261115k"></script>
-  <script src="app.js?v=20261115k"></script>
+  <script src="data.js?v=20261115l"></script>
+  <script src="app.js?v=20261115l"></script>
 </body>
 </html>
