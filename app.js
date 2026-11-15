@@ -63,6 +63,7 @@
   const settingsFeedback = document.getElementById('settingsFeedback');
   const gasStatusText = document.getElementById('gasStatusText');
   const chatMessages = document.getElementById('chatMessages');
+  const chatWelcomeMsg = document.getElementById('chatWelcomeMsg');
   const chatForm = document.getElementById('chatForm');
   const chatInput = document.getElementById('chatInput');
   const chatSendBtn = document.getElementById('chatSendBtn');
@@ -690,9 +691,15 @@
     if (state.gasUrl) {
       gasStatusText.textContent = '已設定 GAS 網址';
       gasStatusText.classList.add('connected');
+      if (chatWelcomeMsg) {
+        chatWelcomeMsg.innerHTML = '嗨嗨～我是午餐小客服 😊<br />已經連線完成！直接問我或點下方按鈕就能幫你挑午餐囉～';
+      }
     } else {
       gasStatusText.textContent = '尚未設定 GAS 網址';
       gasStatusText.classList.remove('connected');
+      if (chatWelcomeMsg) {
+        chatWelcomeMsg.innerHTML = '嗨嗨～我是午餐小客服 😊<br />點右上角 <strong>⚙️ 設定</strong> 貼上 GAS 網址，就能請我幫你挑午餐囉！';
+      }
     }
   }
 
