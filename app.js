@@ -22,6 +22,7 @@
     comments: loadJson(STORAGE_KEYS.comments, {}),
     customStores: loadJson(STORAGE_KEYS.customStores, []),
     reportedClosed: loadJson(STORAGE_KEYS.reportedClosed, []),
+    remoteBaseStores: [],
     remoteCustomStores: [],
     remoteReportedClosed: [],
     remoteComments: {},
@@ -116,8 +117,12 @@
   }
 
   function getAllStores() {
-    const merged = [...STORES];
-    const seenIds = new Set(STORES.map((s) => s.id));
+    const baseStores = state.remoteBaseStores.length > 0 ? state.remoteBaseStores : STORES;
+    const merged = baseStores.map((s) => ({
+      ...s,
+      mapsUrl: s.mapsUrl || buildGoogleMapsUrl(s.name, s.address)
+    }));
+    const seenIds = new Set(merged.map((s) => s.id));
     [...state.remoteCustomStores, ...state.customStores].forEach((s) => {
       if (s && s.id && !seenIds.has(s.id)) {
         seenIds.add(s.id);
@@ -169,12 +174,13 @@
     if (!state.gasUrl) return false;
     try {
       const sep = state.gasUrl.includes('?') ? '&' : '?';
-      const res = await fetch(`${state.gasUrl}${sep}action=getCommunity`, {
+      const res = await fetch(`${state.gasUrl}${sep}action=getCommunity&_t=${Date.now()}`, {
         method: 'GET',
         redirect: 'follow'
       });
       const data = await res.json();
       if (data && data.ok) {
+        state.remoteBaseStores = Array.isArray(data.stores) ? data.stores : [];
         state.remoteCustomStores = Array.isArray(data.customStores) ? data.customStores : [];
         state.remoteReportedClosed = Array.isArray(data.reportedIds) ? data.reportedIds : [];
         state.remoteComments = data.comments && typeof data.comments === 'object' ? data.comments : {};
@@ -183,7 +189,7 @@
       }
       return false;
     } catch {
-      // 靜默忽略，保持使用 localStorage
+      // 靜默忽略，保持使用 localStorage 與內建清單
       return false;
     }
   }
