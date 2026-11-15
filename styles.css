@@ -982,16 +982,16 @@ html, body {
 
 .chat-quick-prompts {
   display: flex;
-  gap: 6px;
-  padding: 7px 11px;
-  overflow-x: auto;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 7px 10px;
   background: var(--surface);
   border-top: 1px solid var(--border);
 }
 
 .quick-chip {
   flex-shrink: 0;
-  padding: 4px 10px;
+  padding: 4px 9px;
   border-radius: 999px;
   border: 1.5px solid var(--border);
   background: #fffcf8;

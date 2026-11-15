@@ -1025,7 +1025,7 @@ ${strings.map((s) => `<si><t xml:space="preserve">${escapeXml(s)}</t></si>`).joi
       gasStatusText.textContent = '已設定 GAS 網址';
       gasStatusText.classList.add('connected');
       if (chatWelcomeMsg) {
-        chatWelcomeMsg.innerHTML = '嗨嗨～我是午餐小客服 😊<br />已經連線完成！直接問我或點下方按鈕就能幫你挑午餐囉～';
+        chatWelcomeMsg.innerHTML = '嗨嗨～我是午餐小客服 😊<br />想吃什麼呢？直接問我或點下方按鈕就能幫你挑囉～';
       }
     } else {
       gasStatusText.textContent = '尚未設定 GAS 網址';
