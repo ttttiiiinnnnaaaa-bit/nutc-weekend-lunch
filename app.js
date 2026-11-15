@@ -22,7 +22,6 @@
     comments: loadJson(STORAGE_KEYS.comments, {}),
     customStores: loadJson(STORAGE_KEYS.customStores, []),
     reportedClosed: loadJson(STORAGE_KEYS.reportedClosed, []),
-    remoteBaseStores: [],
     remoteCustomStores: [],
     remoteReportedClosed: [],
     remoteComments: {},
@@ -45,8 +44,9 @@
   const hiddenBarText = document.getElementById('hiddenBarText');
   const restoreHiddenBtn = document.getElementById('restoreHiddenBtn');
 
-  // Add Store Modal Elements
+  // Add Store & Export Elements
   const openAddStoreBtn = document.getElementById('openAddStoreBtn');
+  const exportExcelBtn = document.getElementById('exportExcelBtn');
   const addStoreModal = document.getElementById('addStoreModal');
   const closeAddStoreBtn = document.getElementById('closeAddStoreBtn');
   const cancelAddStoreBtn = document.getElementById('cancelAddStoreBtn');
@@ -117,12 +117,8 @@
   }
 
   function getAllStores() {
-    const baseStores = state.remoteBaseStores.length > 0 ? state.remoteBaseStores : STORES;
-    const merged = baseStores.map((s) => ({
-      ...s,
-      mapsUrl: s.mapsUrl || buildGoogleMapsUrl(s.name, s.address)
-    }));
-    const seenIds = new Set(merged.map((s) => s.id));
+    const merged = [...STORES];
+    const seenIds = new Set(STORES.map((s) => s.id));
     [...state.remoteCustomStores, ...state.customStores].forEach((s) => {
       if (s && s.id && !seenIds.has(s.id)) {
         seenIds.add(s.id);
@@ -180,7 +176,6 @@
       });
       const data = await res.json();
       if (data && data.ok) {
-        state.remoteBaseStores = Array.isArray(data.stores) ? data.stores : [];
         state.remoteCustomStores = Array.isArray(data.customStores) ? data.customStores : [];
         state.remoteReportedClosed = Array.isArray(data.reportedIds) ? data.reportedIds : [];
         state.remoteComments = data.comments && typeof data.comments === 'object' ? data.comments : {};
@@ -189,7 +184,7 @@
       }
       return false;
     } catch {
-      // 靜默忽略，保持使用 localStorage 與內建清單
+      // 靜默忽略，保持使用 localStorage
       return false;
     }
   }
@@ -692,6 +687,336 @@
     closeAddStoreModal();
     switchView('explore');
   });
+
+  // ==================== Export All Stores to .xlsx ====================
+  const CRC32_TABLE = (() => {
+    const tbl = new Uint32Array(256);
+    for (let i = 0; i < 256; i++) {
+      let c = i;
+      for (let k = 0; k < 8; k++) {
+        c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+      }
+      tbl[i] = c >>> 0;
+    }
+    return tbl;
+  })();
+
+  function crc32Bytes(bytes) {
+    let crc = 0xffffffff;
+    for (let i = 0; i < bytes.length; i++) {
+      crc = CRC32_TABLE[(crc ^ bytes[i]) & 0xff] ^ (crc >>> 8);
+    }
+    return (crc ^ 0xffffffff) >>> 0;
+  }
+
+  function buildStoredZipBytes(entries) {
+    const encoder = new TextEncoder();
+    const now = new Date();
+    const dosTime = ((now.getHours() & 0x1f) << 11) | ((now.getMinutes() & 0x3f) << 5) | ((now.getSeconds() >> 1) & 0x1f);
+    const dosDate = (((Math.max(1980, now.getFullYear()) - 1980) & 0x7f) << 9) | (((now.getMonth() + 1) & 0x0f) << 5) | (now.getDate() & 0x1f);
+
+    const prepared = entries.map((entry) => {
+      const nameBytes = encoder.encode(entry.name);
+      const dataBytes = typeof entry.content === 'string' ? encoder.encode(entry.content) : entry.content;
+      return {
+        nameBytes,
+        dataBytes,
+        crc: crc32Bytes(dataBytes),
+        offset: 0
+      };
+    });
+
+    let totalSize = 0;
+    prepared.forEach((p) => {
+      p.offset = totalSize;
+      totalSize += 30 + p.nameBytes.length + p.dataBytes.length;
+    });
+
+    const cdStart = totalSize;
+    prepared.forEach((p) => {
+      totalSize += 46 + p.nameBytes.length;
+    });
+    const cdSize = totalSize - cdStart;
+    totalSize += 22;
+
+    const out = new Uint8Array(totalSize);
+    const view = new DataView(out.buffer);
+    let pos = 0;
+
+    prepared.forEach((p) => {
+      view.setUint32(pos, 0x04034b50, true);
+      view.setUint16(pos + 4, 20, true);
+      view.setUint16(pos + 6, 0x0800, true);
+      view.setUint16(pos + 8, 0, true);
+      view.setUint16(pos + 10, dosTime, true);
+      view.setUint16(pos + 12, dosDate, true);
+      view.setUint32(pos + 14, p.crc, true);
+      view.setUint32(pos + 18, p.dataBytes.length, true);
+      view.setUint32(pos + 22, p.dataBytes.length, true);
+      view.setUint16(pos + 26, p.nameBytes.length, true);
+      view.setUint16(pos + 28, 0, true);
+      out.set(p.nameBytes, pos + 30);
+      out.set(p.dataBytes, pos + 30 + p.nameBytes.length);
+      pos += 30 + p.nameBytes.length + p.dataBytes.length;
+    });
+
+    prepared.forEach((p) => {
+      view.setUint32(pos, 0x02014b50, true);
+      view.setUint16(pos + 4, 20, true);
+      view.setUint16(pos + 6, 20, true);
+      view.setUint16(pos + 8, 0x0800, true);
+      view.setUint16(pos + 10, 0, true);
+      view.setUint16(pos + 12, dosTime, true);
+      view.setUint16(pos + 14, dosDate, true);
+      view.setUint32(pos + 16, p.crc, true);
+      view.setUint32(pos + 20, p.dataBytes.length, true);
+      view.setUint32(pos + 24, p.dataBytes.length, true);
+      view.setUint16(pos + 28, p.nameBytes.length, true);
+      view.setUint16(pos + 30, 0, true);
+      view.setUint16(pos + 32, 0, true);
+      view.setUint16(pos + 34, 0, true);
+      view.setUint16(pos + 36, 0, true);
+      view.setUint32(pos + 38, 0, true);
+      view.setUint32(pos + 42, p.offset, true);
+      out.set(p.nameBytes, pos + 46);
+      pos += 46 + p.nameBytes.length;
+    });
+
+    view.setUint32(pos, 0x06054b50, true);
+    view.setUint16(pos + 4, 0, true);
+    view.setUint16(pos + 6, 0, true);
+    view.setUint16(pos + 8, prepared.length, true);
+    view.setUint16(pos + 10, prepared.length, true);
+    view.setUint32(pos + 12, cdSize, true);
+    view.setUint32(pos + 16, cdStart, true);
+    view.setUint16(pos + 20, 0, true);
+    return out;
+  }
+
+  function escapeXml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  }
+
+  function colToLetter(idx) {
+    let s = '';
+    let n = idx + 1;
+    while (n > 0) {
+      const rem = (n - 1) % 26;
+      s = String.fromCharCode(65 + rem) + s;
+      n = Math.floor((n - 1) / 26);
+    }
+    return s;
+  }
+
+  function buildStoreExportRow(store, reportedSet) {
+    const campusLabel = (CAMPUS_INFO[store.campus] && CAMPUS_INFO[store.campus].name) || store.campus || '';
+    const catLabel = store.category === 'meal' ? '150元內正餐' : store.subCategory === 'drink' ? '手搖飲' : '點心';
+    const satText = store.hours && store.hours.sat
+      ? (store.hours.sat.open ? store.hours.sat.text : (store.hours.sat.text || '週六公休'))
+      : '週六公休';
+    const sunText = store.hours && store.hours.sun
+      ? (store.hours.sun.open ? store.hours.sun.text : (store.hours.sun.text || '週日公休'))
+      : '週日公休';
+    const statusText = reportedSet.has(store.id) ? '已標記隱藏' : '正常';
+    const commentCount = getCommentsForStore(store.id).length;
+
+    return [
+      store.id || '',
+      campusLabel,
+      catLabel,
+      store.name || '',
+      Number(store.rating) || 0,
+      store.priceRange || '',
+      Number(store.maxPrice) || 0,
+      Number(store.walkMinutes) || 0,
+      Number(store.distanceMeters) || 0,
+      Array.isArray(store.highlights) ? store.highlights.join('、') : '',
+      satText,
+      sunText,
+      store.address || '',
+      store.mapsUrl || buildGoogleMapsUrl(store.name, store.address),
+      statusText,
+      commentCount
+    ];
+  }
+
+  function buildExcelWorkbookBytes(mainStores, customStores, reportedSet) {
+    const headers = [
+      '編號', '區域', '分類', '店名', '星級', '價格區間', '最高價格',
+      '步行分鐘', '距離(公尺)', '推薦特色', '週六營業', '週日營業',
+      '地址', 'Google地圖連結', '狀態', '留言數'
+    ];
+    const colWidths = [13, 12, 14, 30, 8, 12, 10, 10, 12, 28, 15, 15, 32, 46, 13, 9];
+    const strings = [];
+    const strMap = new Map();
+
+    function intern(val) {
+      const s = String(val);
+      if (strMap.has(s)) return strMap.get(s);
+      const idx = strings.length;
+      strings.push(s);
+      strMap.set(s, idx);
+      return idx;
+    }
+
+    function buildSheetXml(rows) {
+      const colsXml = colWidths
+        .map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`)
+        .join('');
+      const rowsXml = rows
+        .map((row, rIdx) => {
+          const rNum = rIdx + 1;
+          const styleId = rIdx === 0 ? 1 : 2;
+          const cellsXml = row
+            .map((val, cIdx) => {
+              const ref = `${colToLetter(cIdx)}${rNum}`;
+              if (typeof val === 'number' && Number.isFinite(val)) {
+                return `<c r="${ref}" s="${styleId}"><v>${val}</v></c>`;
+              }
+              return `<c r="${ref}" t="s" s="${styleId}"><v>${intern(val ?? '')}</v></c>`;
+            })
+            .join('');
+          const ht = rIdx === 0 ? 24 : 20;
+          return `<row r="${rNum}" ht="${ht}" customHeight="1">${cellsXml}</row>`;
+        })
+        .join('');
+
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <sheetViews>
+    <sheetView workbookViewId="0">
+      <pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/>
+    </sheetView>
+  </sheetViews>
+  <sheetFormatPr defaultRowHeight="20"/>
+  <cols>${colsXml}</cols>
+  <sheetData>${rowsXml}</sheetData>
+</worksheet>`;
+    }
+
+    const mainRows = [headers, ...mainStores.map((s) => buildStoreExportRow(s, reportedSet))];
+    const customRows = [headers, ...customStores.map((s) => buildStoreExportRow(s, reportedSet))];
+    const sheet1Xml = buildSheetXml(mainRows);
+    const sheet2Xml = buildSheetXml(customRows);
+
+    const sharedStringsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${strings.length}" uniqueCount="${strings.length}">
+${strings.map((s) => `<si><t xml:space="preserve">${escapeXml(s)}</t></si>`).join('\n')}
+</sst>`;
+
+    const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <fonts count="2">
+    <font><sz val="11"/><name val="Microsoft JhengHei"/></font>
+    <font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Microsoft JhengHei"/></font>
+  </fonts>
+  <fills count="3">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FF8B5E3C"/><bgColor indexed="64"/></patternFill></fill>
+  </fills>
+  <borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>
+  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+  <cellXfs count="3">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+    <xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="center"/></xf>
+  </cellXfs>
+</styleSheet>`;
+
+    const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+  <Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+  <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>
+</Types>`;
+
+    const rootRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`;
+
+    const workbookXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets>
+    <sheet name="主清單" sheetId="1" r:id="rId1"/>
+    <sheet name="網友新增" sheetId="2" r:id="rId2"/>
+  </sheets>
+</workbook>`;
+
+    const workbookRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>
+  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+  <Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>
+</Relationships>`;
+
+    return buildStoredZipBytes([
+      { name: '[Content_Types].xml', content: contentTypesXml },
+      { name: '_rels/.rels', content: rootRelsXml },
+      { name: 'xl/workbook.xml', content: workbookXml },
+      { name: 'xl/_rels/workbook.xml.rels', content: workbookRelsXml },
+      { name: 'xl/styles.xml', content: stylesXml },
+      { name: 'xl/sharedStrings.xml', content: sharedStringsXml },
+      { name: 'xl/worksheets/sheet1.xml', content: sheet1Xml },
+      { name: 'xl/worksheets/sheet2.xml', content: sheet2Xml }
+    ]);
+  }
+
+  function exportStoresToExcel() {
+    const reportedSet = getReportedSet();
+    const baseIds = new Set(STORES.map((s) => s.id));
+    const seenCustom = new Set();
+    const customList = [];
+    [...state.remoteCustomStores, ...state.customStores].forEach((s) => {
+      if (s && s.id && !baseIds.has(s.id) && !seenCustom.has(s.id)) {
+        seenCustom.add(s.id);
+        customList.push({
+          ...s,
+          isCustom: true,
+          mapsUrl: s.mapsUrl || buildGoogleMapsUrl(s.name, s.address)
+        });
+      }
+    });
+
+    const bytes = buildExcelWorkbookBytes(STORES, customList, reportedSet);
+    const blob = new Blob([bytes], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const today = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `中科大六日午餐店家清單_${today}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    if (exportExcelBtn) {
+      const span = exportExcelBtn.querySelector('span');
+      if (span) {
+        span.textContent = '✓ 已匯出 Excel';
+        setTimeout(() => {
+          span.textContent = '📥 匯出 Excel';
+        }, 1600);
+      }
+    }
+  }
+
+  if (exportExcelBtn) {
+    exportExcelBtn.addEventListener('click', exportStoresToExcel);
+  }
 
   // ==================== Cartoon Smiley Chat Widget & GAS Integration ====================
   function updateGasStatusUI() {

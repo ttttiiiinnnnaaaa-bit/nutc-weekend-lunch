@@ -101,6 +101,7 @@ html, body {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .nav-btn {
@@ -1060,6 +1061,18 @@ html, body {
 .add-store-nav-btn:hover {
   background: var(--primary);
   border-color: var(--primary);
+  color: #ffffff;
+}
+
+.export-excel-nav-btn {
+  border-color: #b7dfd4;
+  background: #effaf6;
+  color: #1f6f5b;
+}
+
+.export-excel-nav-btn:hover {
+  background: #2f9e84;
+  border-color: #2f9e84;
   color: #ffffff;
 }
 
