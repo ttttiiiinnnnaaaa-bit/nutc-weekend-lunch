@@ -163,7 +163,7 @@
   }
 
   async function syncFromGas() {
-    if (!state.gasUrl) return;
+    if (!state.gasUrl) return false;
     try {
       const sep = state.gasUrl.includes('?') ? '&' : '?';
       const res = await fetch(`${state.gasUrl}${sep}action=getCommunity`, {
@@ -176,9 +176,12 @@
         state.remoteReportedClosed = Array.isArray(data.reportedIds) ? data.reportedIds : [];
         state.remoteComments = data.comments && typeof data.comments === 'object' ? data.comments : {};
         renderCurrentView();
+        return true;
       }
+      return false;
     } catch {
       // 靜默忽略，保持使用 localStorage
+      return false;
     }
   }
 
@@ -707,6 +710,14 @@
     return div;
   }
 
+  function formatChatReplyText(text) {
+    return String(text || '')
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/^#{1,6}\s*/gm, '')
+      .replace(/^[ \t]+/gm, '')
+      .trim();
+  }
+
   function buildSystemContext() {
     const campusInfo = CAMPUS_INFO[state.campus];
     const campusName = campusInfo.name;
@@ -717,7 +728,7 @@
     const storeLines = openStores
       .map((s) => {
         const type = s.category === 'meal' ? '正餐' : s.subCategory === 'snack' ? '點心' : '手搖飲';
-        return `- [${type}] ${s.name}｜${s.priceRange}｜${s.rating}★｜從${campusInfo.originLabel}步行${s.walkMinutes}分(${s.distanceMeters}m)｜${s.hours[state.day].text}｜${(s.highlights || []).join('、')}`;
+        return `- [${type}] ${s.name}｜${s.priceRange}｜${s.rating}★｜步行${s.walkMinutes}分｜${s.hours[state.day].text}｜${(s.highlights || []).join('、')}`;
       })
       .join('\n');
 
@@ -727,11 +738,11 @@
       .join('、');
 
     return [
-      '你是「國立臺中科技大學六日午餐小客服」，語氣可愛溫馨親切，使用繁體中文回答，簡潔實用，開頭不要空兩格。',
-      `使用者目前瀏覽區域：${campusName}（距離從${campusInfo.originLabel} ${campusInfo.gateAddress} 起算），時段：${dayName}。`,
-      '原則：推薦網友真實非業配好評的 150 元內正餐，以及平價點心＋手搖飲。',
-      `${campusName}在${dayName}有營業的店家清單：\n${storeLines}`,
-      closedToday ? `${campusName}在${dayName}公休的店家：${closedToday}` : ''
+      '你是「中科大午餐小客服」，用繁體中文回覆，語氣像親切熱情的朋友。',
+      '【回覆規則】\n1. 簡潔精準：每次回覆控制在 3 句、約 70～110 字以內，直接給重點，不要長篇大論。\n2. 推薦精選：推薦時最多挑 2～3 間最適合的就好，每間一句「・店名｜步行幾分｜價位｜小亮點」。\n3. 禁止使用 Markdown 符號（不要寫 ** 或 ##），開頭不要空兩格。',
+      `目前瀏覽：${campusName}（從${campusInfo.originLabel}出發），時段：${dayName}。`,
+      `${campusName}${dayName}有營業：\n${storeLines}`,
+      closedToday ? `${dayName}公休：${closedToday}` : ''
     ]
       .filter(Boolean)
       .join('\n\n');
@@ -792,7 +803,7 @@
 
       state.chatHistory = [...nextMessages, assistantMsg];
       loadingEl.classList.remove('loading');
-      loadingEl.textContent = (assistantMsg.content || '（AI 未回傳文字內容）').trim();
+      loadingEl.textContent = formatChatReplyText(assistantMsg.content) || '（AI 未回傳文字內容）';
     } catch (err) {
       loadingEl.classList.remove('loading');
       loadingEl.textContent = `連線失敗：${err.message}\n請確認 GAS 網址正確且部署權限為「所有人」。`;
@@ -822,22 +833,27 @@
     }
   });
 
-  saveGasBtn.addEventListener('click', () => {
+  saveGasBtn.addEventListener('click', async () => {
     const val = gasUrlInput.value.trim();
     if (val && !/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec/.test(val)) {
       setSettingsFeedback('網址格式應為 https://script.google.com/macros/s/.../exec', false);
       return;
     }
     state.gasUrl = val;
+    updateGasStatusUI();
     if (val) {
       localStorage.setItem(STORAGE_KEYS.gasUrl, val);
-      setSettingsFeedback('已儲存 GAS 網址！正在同步資料...', true);
-      syncFromGas();
+      setSettingsFeedback('儲存中，正在同步資料...', true);
+      const synced = await syncFromGas();
+      if (synced) {
+        setSettingsFeedback('已儲存 GAS 網址並完成同步 ✓', true);
+      } else {
+        setSettingsFeedback('已儲存網址，但同步失敗（請點「測試連線」確認 GAS 權限為所有人）', false);
+      }
     } else {
       localStorage.removeItem(STORAGE_KEYS.gasUrl);
       setSettingsFeedback('已清除 GAS 網址。', true);
     }
-    updateGasStatusUI();
   });
 
   testGasBtn.addEventListener('click', async () => {
