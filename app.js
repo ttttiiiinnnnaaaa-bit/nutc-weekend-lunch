@@ -377,7 +377,7 @@
         <div class="store-actions">
           <a
             class="map-link-btn"
-            href="${escapeHtml(store.mapsUrl)}"
+            href="${escapeHtml(store.mapsUrl || buildGoogleMapsUrl(store.name, store.address))}"
             target="_blank"
             rel="noopener noreferrer"
           >

@@ -1220,3 +1220,9 @@ const STORES = [
     }
   }
 ];
+
+STORES.forEach((store) => {
+  if (!store.mapsUrl) {
+    store.mapsUrl = buildGoogleMapsUrl(store.name, store.address);
+  }
+});
