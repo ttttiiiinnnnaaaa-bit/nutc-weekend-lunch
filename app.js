@@ -11,11 +11,10 @@
 
   const state = {
     view: 'explore',
-    campus: 'sanmin',
+    campus: 'yizhong',
     day: 'sat',
     category: 'meal',
     sort: 'rating',
-    search: '',
     favCampusFilter: 'all',
     favorites: loadJson(STORAGE_KEYS.favorites, []),
     comments: loadJson(STORAGE_KEYS.comments, {}),
@@ -38,7 +37,6 @@
   const storeGrid = document.getElementById('storeGrid');
   const favoritesGrid = document.getElementById('favoritesGrid');
   const resultSummary = document.getElementById('resultSummary');
-  const searchInput = document.getElementById('searchInput');
   const exploreMoreMapsLink = document.getElementById('exploreMoreMapsLink');
   const hiddenBar = document.getElementById('hiddenBar');
   const hiddenBarText = document.getElementById('hiddenBarText');
@@ -185,7 +183,9 @@
   }
 
   function updateFavBadge() {
-    favCountBadge.textContent = String(state.favorites.length);
+    const reportedSet = getReportedSet();
+    const count = getAllStores().filter((s) => !reportedSet.has(s.id) && isFavorite(s.id)).length;
+    favCountBadge.textContent = String(count);
   }
 
   function isFavorite(storeId) {
@@ -261,24 +261,18 @@
   }
 
   function getFilteredStores() {
-    const keyword = state.search.trim().toLowerCase();
     const reportedSet = getReportedSet();
 
     const filtered = getAllStores().filter((store) => {
       if (reportedSet.has(store.id)) return false;
       if (store.campus !== state.campus) return false;
       if (store.category !== state.category) return false;
-      if (store.walkMinutes > 10) return false;
+      if (store.walkMinutes > 15) return false;
       if (store.category === 'meal' && store.maxPrice > 150) return false;
-      if (store.category === 'drink' && store.maxPrice > 100) return false;
+      if (store.category === 'snackdrink' && store.maxPrice > 120) return false;
 
       const dayHours = store.hours[state.day];
       if (!dayHours || !dayHours.open) return false;
-
-      if (keyword) {
-        const haystack = [store.name, store.address, ...(store.highlights || [])].join(' ').toLowerCase();
-        if (!haystack.includes(keyword)) return false;
-      }
 
       return true;
     });
@@ -301,10 +295,13 @@
     const isCommentsOpen = state.openComments.has(store.id);
     const campusLabel = CAMPUS_INFO[store.campus]?.name || '';
 
-    const categoryBadge =
-      store.category === 'meal'
-        ? '<span class="badge badge-meal">🍱 正餐</span>'
-        : '<span class="badge badge-drink">🧋 手搖飲</span>';
+    let categoryBadge = '<span class="badge badge-meal">🍱 正餐</span>';
+    if (store.category === 'snackdrink') {
+      categoryBadge =
+        store.subCategory === 'snack'
+          ? '<span class="badge badge-snack">🍡 點心</span>'
+          : '<span class="badge badge-drink">🧋 手搖飲</span>';
+    }
 
     const dayKey = options.activeDay || 'sat';
     const hoursText = options.showCampusBadge
@@ -365,15 +362,7 @@
           </div>
         </div>
 
-        <a
-          class="store-name-link"
-          href="${escapeHtml(store.mapsUrl)}"
-          target="_blank"
-          rel="noopener noreferrer"
-          title="${escapeHtml(store.address)}"
-        >
-          ${escapeHtml(store.name)}
-        </a>
+        <h3 class="store-name" title="${escapeHtml(store.address)}">${escapeHtml(store.name)}</h3>
 
         <div class="store-quick-stats">
           <span class="stat-chip stat-rating">⭐ ${Number(store.rating).toFixed(1)}</span>
@@ -438,9 +427,9 @@
     const stores = getFilteredStores();
     const campusObj = CAMPUS_INFO[state.campus];
     const dayText = state.day === 'sat' ? '週六' : '週日';
-    const catText = state.category === 'meal' ? '正餐' : '手搖飲';
+    const catText = state.category === 'meal' ? '正餐' : '點心＋手搖飲';
 
-    resultSummary.textContent = `${campusObj.name}・${dayText}營業中・${catText} ${stores.length} 間`;
+    resultSummary.textContent = `${campusObj.name}・${dayText}營業中・${catText} ${stores.length} 間（從${campusObj.originLabel}步行）`;
     exploreMoreMapsLink.href = state.category === 'meal' ? campusObj.nearbyMealMapsUrl : campusObj.nearbyDrinkMapsUrl;
 
     const reportedCount = getReportedSet().size;
@@ -494,6 +483,7 @@
   }
 
   function renderCurrentView() {
+    updateFavBadge();
     if (state.view === 'explore') {
       renderExplore();
     } else {
@@ -561,11 +551,6 @@
     });
   });
 
-  searchInput.addEventListener('input', (e) => {
-    state.search = e.target.value;
-    renderExplore();
-  });
-
   function handleGridClick(e) {
     const favBtn = e.target.closest('[data-action="toggle-fav"]');
     if (favBtn) {
@@ -621,7 +606,7 @@
 
   function updateNewStorePriceCap() {
     const isMeal = newStoreCategory.value === 'meal';
-    newStoreMaxPrice.max = isMeal ? '150' : '100';
+    newStoreMaxPrice.max = isMeal ? '150' : '120';
     if (Number(newStoreMaxPrice.value) > Number(newStoreMaxPrice.max)) {
       newStoreMaxPrice.value = newStoreMaxPrice.max;
     }
@@ -642,8 +627,8 @@
     const category = f.category.value;
     const name = f.name.value.trim();
     const address = f.address.value.trim();
-    const walkMinutes = Math.min(10, Math.max(1, Number(f.walkMinutes.value) || 5));
-    const cap = category === 'meal' ? 150 : 100;
+    const walkMinutes = Math.min(15, Math.max(1, Number(f.walkMinutes.value) || 5));
+    const cap = category === 'meal' ? 150 : 120;
     const maxPrice = Math.min(cap, Math.max(10, Number(f.maxPrice.value) || cap));
     const rating = Math.min(5, Math.max(1, Number(f.rating.value) || 4.5));
     const satText = f.satHours.value.trim();
@@ -658,6 +643,7 @@
       id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       campus,
       category,
+      subCategory: category === 'snackdrink' ? 'snack' : undefined,
       name,
       address,
       distanceMeters: walkMinutes * 75,
@@ -665,7 +651,7 @@
       rating,
       priceRange: `≤ $${maxPrice}`,
       maxPrice,
-      highlights: highlightsRaw.length > 0 ? highlightsRaw : [category === 'meal' ? '平價正餐' : '手搖飲'],
+      highlights: highlightsRaw.length > 0 ? highlightsRaw : [category === 'meal' ? '平價正餐' : '點心／手搖飲'],
       hours: {
         sat: satText ? { open: true, text: satText } : { open: false, text: '週六公休' },
         sun: sunText ? { open: true, text: sunText } : { open: false, text: '週日公休' }
@@ -715,22 +701,23 @@
   function appendChatMessage(role, text, isLoading = false) {
     const div = document.createElement('div');
     div.className = `chat-msg ${role === 'user' ? 'user' : 'bot'}${isLoading ? ' loading' : ''}`;
-    div.textContent = text;
+    div.textContent = String(text || '').trim();
     chatMessages.appendChild(div);
     chatMessages.scrollTop = chatMessages.scrollHeight;
     return div;
   }
 
   function buildSystemContext() {
-    const campusName = CAMPUS_INFO[state.campus].name;
+    const campusInfo = CAMPUS_INFO[state.campus];
+    const campusName = campusInfo.name;
     const dayName = state.day === 'sat' ? '週六中午' : '週日中午';
     const reportedSet = getReportedSet();
     const allStores = getAllStores().filter((s) => !reportedSet.has(s.id));
     const openStores = allStores.filter((s) => s.campus === state.campus && s.hours[state.day]?.open);
     const storeLines = openStores
       .map((s) => {
-        const type = s.category === 'meal' ? '正餐' : '手搖飲';
-        return `- [${type}] ${s.name}｜${s.priceRange}｜${s.rating}★｜步行${s.walkMinutes}分(${s.distanceMeters}m)｜${s.hours[state.day].text}｜${(s.highlights || []).join('、')}`;
+        const type = s.category === 'meal' ? '正餐' : s.subCategory === 'snack' ? '點心' : '手搖飲';
+        return `- [${type}] ${s.name}｜${s.priceRange}｜${s.rating}★｜從${campusInfo.originLabel}步行${s.walkMinutes}分(${s.distanceMeters}m)｜${s.hours[state.day].text}｜${(s.highlights || []).join('、')}`;
       })
       .join('\n');
 
@@ -740,9 +727,9 @@
       .join('、');
 
     return [
-      '你是「國立臺中科技大學六日午餐小客服」，語氣可愛溫馨親切，使用繁體中文回答，簡潔實用。',
-      `使用者目前瀏覽：${campusName}（${CAMPUS_INFO[state.campus].gateAddress}），時段：${dayName}。`,
-      '原則：推薦 10 分鐘內走得到的店家，正餐 150 元內、手搖飲 100 元內，不推薦點心。',
+      '你是「國立臺中科技大學六日午餐小客服」，語氣可愛溫馨親切，使用繁體中文回答，簡潔實用，開頭不要空兩格。',
+      `使用者目前瀏覽區域：${campusName}（距離從${campusInfo.originLabel} ${campusInfo.gateAddress} 起算），時段：${dayName}。`,
+      '原則：推薦網友真實非業配好評的 150 元內正餐，以及平價點心＋手搖飲。',
       `${campusName}在${dayName}有營業的店家清單：\n${storeLines}`,
       closedToday ? `${campusName}在${dayName}公休的店家：${closedToday}` : ''
     ]
@@ -805,7 +792,7 @@
 
       state.chatHistory = [...nextMessages, assistantMsg];
       loadingEl.classList.remove('loading');
-      loadingEl.textContent = assistantMsg.content || '（AI 未回傳文字內容）';
+      loadingEl.textContent = (assistantMsg.content || '（AI 未回傳文字內容）').trim();
     } catch (err) {
       loadingEl.classList.remove('loading');
       loadingEl.textContent = `連線失敗：${err.message}\n請確認 GAS 網址正確且部署權限為「所有人」。`;

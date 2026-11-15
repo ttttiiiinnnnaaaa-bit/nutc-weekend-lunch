@@ -16,7 +16,7 @@
         <span class="brand-badge" aria-hidden="true">🍙</span>
         <div>
           <h1>中科大六日午餐小地圖</h1>
-          <p class="subtitle">步行 10 分內 · 正餐 ≤$150 · 手搖飲 ≤$100</p>
+          <p class="subtitle">一中街（三民校區步行）· 第二／第五市場（民生校區步行）</p>
         </div>
       </div>
 
@@ -36,28 +36,39 @@
   </header>
 
   <main class="container main-content">
-    <!-- 校區選擇（三民校區與民生校區分開） -->
-    <section class="campus-section" aria-label="校區選擇">
-      <div class="campus-switcher" role="tablist" aria-label="切換校區">
-        <button type="button" class="campus-card active" data-campus="sanmin" role="tab" aria-selected="true">
+    <!-- 區域選擇：一中街（三民校區步行計算）／第二市場、第五市場（民生校區步行計算） -->
+    <section class="campus-section" aria-label="區域選擇">
+      <div class="campus-switcher campus-switcher-3" role="tablist" aria-label="切換美食區域">
+        <button type="button" class="campus-card active" data-campus="yizhong" role="tab" aria-selected="true">
           <span class="campus-emoji" aria-hidden="true">🏫</span>
           <div>
             <div class="campus-title-row">
-              <h2>三民校區</h2>
-              <span class="campus-tag">一中商圈</span>
+              <h2>一中街</h2>
+              <span class="campus-tag">三民校區步行計</span>
             </div>
-            <p>北區三民路三段 129 號</p>
+            <p>從三民校區大門出發</p>
           </div>
         </button>
 
-        <button type="button" class="campus-card" data-campus="minsheng" role="tab" aria-selected="false">
+        <button type="button" class="campus-card" data-campus="market2" role="tab" aria-selected="false">
+          <span class="campus-emoji" aria-hidden="true">🏮</span>
+          <div>
+            <div class="campus-title-row">
+              <h2>第二市場</h2>
+              <span class="campus-tag">民生校區步行計</span>
+            </div>
+            <p>從民生校區大門出發</p>
+          </div>
+        </button>
+
+        <button type="button" class="campus-card" data-campus="market5" role="tab" aria-selected="false">
           <span class="campus-emoji" aria-hidden="true">🌿</span>
           <div>
             <div class="campus-title-row">
-              <h2>民生校區</h2>
-              <span class="campus-tag">府後／第五市場</span>
+              <h2>第五市場</h2>
+              <span class="campus-tag">民生校區步行計</span>
             </div>
-            <p>西區三民路一段 193 號</p>
+            <p>從民生校區大門出發</p>
           </div>
         </button>
       </div>
@@ -72,9 +83,9 @@
             <button type="button" class="pill-btn" data-day="sun">🌤️ 週日中午</button>
           </div>
 
-          <div class="pill-group" role="group" aria-label="正餐與飲料分開點選">
+          <div class="pill-group" role="group" aria-label="正餐與點心飲料分開點選">
             <button type="button" class="pill-btn category-meal active" data-category="meal">🍱 150元內正餐</button>
-            <button type="button" class="pill-btn category-drink" data-category="drink">🧋 100元內手搖飲</button>
+            <button type="button" class="pill-btn category-drink" data-category="snackdrink">🍡 點心＋手搖飲</button>
           </div>
 
           <div class="pill-group" role="group" aria-label="排序方式">
@@ -84,19 +95,15 @@
         </div>
 
         <div class="controls-meta">
-          <div class="search-box">
-            <span class="search-icon" aria-hidden="true">🔍</span>
-            <input type="search" id="searchInput" placeholder="快速搜尋店名或餐點..." aria-label="搜尋店家" />
-          </div>
+          <div class="result-summary" id="resultSummary">載入中...</div>
           <div class="meta-right">
-            <div class="result-summary" id="resultSummary">載入中...</div>
             <a
               id="exploreMoreMapsLink"
               class="explore-maps-btn"
               href="https://www.google.com/maps"
               target="_blank"
               rel="noopener noreferrer"
-              title="在 Google 地圖查看校區附近更多營業中店家"
+              title="在 Google 地圖查看附近更多營業中店家"
             >
               🗺️ 地圖找更多 ↗
             </a>
@@ -117,12 +124,13 @@
       <div class="favorites-header">
         <div>
           <h2>💖 我的收藏店家</h2>
-          <p class="favorites-desc">喜歡的六日午餐與飲料都在這裡</p>
+          <p class="favorites-desc">喜歡的六日午餐、點心與飲料都在這裡</p>
         </div>
-        <div class="pill-group" role="group" aria-label="收藏校區篩選">
+        <div class="pill-group" role="group" aria-label="收藏區域篩選">
           <button type="button" class="pill-btn active" data-fav-campus="all">全部</button>
-          <button type="button" class="pill-btn" data-fav-campus="sanmin">三民校區</button>
-          <button type="button" class="pill-btn" data-fav-campus="minsheng">民生校區</button>
+          <button type="button" class="pill-btn" data-fav-campus="yizhong">一中街</button>
+          <button type="button" class="pill-btn" data-fav-campus="market2">第二市場</button>
+          <button type="button" class="pill-btn" data-fav-campus="market5">第五市場</button>
         </div>
       </div>
 
@@ -146,17 +154,18 @@
       <form id="addStoreForm" class="modal-form">
         <div class="form-grid-2">
           <label class="field-label">
-            校區
+            區域
             <select name="campus" required>
-              <option value="sanmin">🏫 三民校區</option>
-              <option value="minsheng">🌿 民生校區</option>
+              <option value="yizhong">🏫 一中街（三民校區計距）</option>
+              <option value="market2">🏮 第二市場（民生校區計距）</option>
+              <option value="market5">🌿 第五市場（民生校區計距）</option>
             </select>
           </label>
           <label class="field-label">
-            分類（不含點心）
+            分類
             <select name="category" id="newStoreCategory" required>
               <option value="meal">🍱 150元內正餐</option>
-              <option value="drink">🧋 100元內手搖飲</option>
+              <option value="snackdrink">🍡 點心＋手搖飲</option>
             </select>
           </label>
         </div>
@@ -173,8 +182,8 @@
 
         <div class="form-grid-3">
           <label class="field-label">
-            步行分鐘（≤10）
-            <input type="number" name="walkMinutes" min="1" max="10" value="5" required />
+            步行分鐘（從校區大門）
+            <input type="number" name="walkMinutes" min="1" max="15" value="5" required />
           </label>
           <label class="field-label">
             最高價（元）
@@ -210,18 +219,39 @@
     </div>
   </div>
 
-  <!-- 右下角卡通笑臉小客服 -->
+  <!-- 右下角可愛小姐小客服 -->
   <div class="chat-widget" id="chatWidget">
     <div class="chat-panel" id="chatPanel" hidden aria-label="AI 午餐小客服視窗">
       <div class="chat-header">
         <div class="chat-header-title">
-          <svg class="mini-smiley" viewBox="0 0 64 64" width="32" height="32" aria-hidden="true">
-            <circle cx="32" cy="32" r="29" fill="#FFE066" stroke="#4A3728" stroke-width="3.5" />
-            <circle cx="22" cy="25" r="3.4" fill="#4A3728" />
-            <circle cx="42" cy="25" r="3.4" fill="#4A3728" />
-            <circle cx="16.5" cy="33" r="4.2" fill="#FF9E9E" opacity="0.8" />
-            <circle cx="47.5" cy="33" r="4.2" fill="#FF9E9E" opacity="0.8" />
-            <path d="M21 36 Q32 47 43 36" fill="none" stroke="#4A3728" stroke-width="3.5" stroke-linecap="round" />
+          <svg class="mini-smiley" viewBox="0 0 80 80" width="34" height="34" aria-hidden="true">
+            <defs>
+              <clipPath id="girlMiniClip">
+                <circle cx="40" cy="40" r="33.5" />
+              </clipPath>
+            </defs>
+            <circle cx="40" cy="40" r="35" fill="#FFE9DC" stroke="#4A3728" stroke-width="3.2" />
+            <g clip-path="url(#girlMiniClip)">
+              <path d="M16 44 C15 21, 25 11, 40 11 C55 11, 65 21, 64 44 C64 56, 59 64, 53 68 L27 68 C21 64, 16 56, 16 44 Z" fill="#6D4735" />
+              <path d="M20 75 C21 61, 30 57, 40 57 C50 57, 59 61, 60 75 Z" fill="#FF8C73" />
+              <path d="M32 57 L40 65 L48 57 Q40 59 32 57 Z" fill="#FFFFFF" />
+              <rect x="36" y="51" width="8" height="8" rx="3" fill="#FFE5D0" />
+              <circle cx="22.5" cy="40" r="3.4" fill="#FFE5D0" />
+              <circle cx="57.5" cy="40" r="3.4" fill="#FFE5D0" />
+              <ellipse cx="40" cy="39" rx="16.5" ry="17" fill="#FFE5D0" />
+              <path d="M23 33 C25 21, 32 17, 40 18 C48 17, 55 21, 57 33 C52 27, 46 25, 40 28 C34 25, 28 27, 23 33 Z" fill="#6D4735" />
+              <rect x="48.5" y="21" width="7.5" height="3.2" rx="1.6" transform="rotate(14 52 22.5)" fill="#FF9EB5" />
+              <circle cx="33" cy="37.5" r="2.6" fill="#4A3728" />
+              <circle cx="47" cy="37.5" r="2.6" fill="#4A3728" />
+              <circle cx="33.9" cy="36.6" r="0.9" fill="#FFFFFF" />
+              <circle cx="47.9" cy="36.6" r="0.9" fill="#FFFFFF" />
+              <path d="M29.8 36.2 Q30.8 35.2 32 35.8" fill="none" stroke="#4A3728" stroke-width="1.4" stroke-linecap="round" />
+              <path d="M48 35.8 Q49.2 35.2 50.2 36.2" fill="none" stroke="#4A3728" stroke-width="1.4" stroke-linecap="round" />
+              <ellipse cx="28.5" cy="42.5" rx="3.8" ry="2.1" fill="#FFA4AD" opacity="0.72" />
+              <ellipse cx="51.5" cy="42.5" rx="3.8" ry="2.1" fill="#FFA4AD" opacity="0.72" />
+              <path d="M35.5 45.2 Q40 48.2 44.5 45.2" fill="none" stroke="#4A3728" stroke-width="2.2" stroke-linecap="round" />
+            </g>
+            <circle cx="40" cy="40" r="35" fill="none" stroke="#4A3728" stroke-width="3.2" />
           </svg>
           <div>
             <strong>午餐小客服</strong>
@@ -258,17 +288,12 @@
       </div>
 
       <!-- 對話訊息區 -->
-      <div class="chat-messages" id="chatMessages">
-        <div class="chat-msg bot">
-          嗨嗨～我是午餐小客服 😊<br />
-          點右上角 <strong>⚙️ 設定</strong> 貼上 GAS 網址，就能請我幫你挑午餐囉！
-        </div>
-      </div>
+      <div class="chat-messages" id="chatMessages"><div class="chat-msg bot">嗨嗨～我是午餐小客服 😊<br />點右上角 <strong>⚙️ 設定</strong> 貼上 GAS 網址，就能請我幫你挑午餐囉！</div></div>
 
       <!-- 快捷提問 -->
       <div class="chat-quick-prompts" id="quickPrompts">
-        <button type="button" class="quick-chip" data-prompt="推薦目前校區與時段，高評價又近的 150 元內正餐">🍱 推薦正餐</button>
-        <button type="button" class="quick-chip" data-prompt="幫我配一組正餐＋100元內手搖飲">🧋 幫我配一組</button>
+        <button type="button" class="quick-chip" data-prompt="推薦目前區域與時段，高評價又近的 150 元內正餐">🍱 推薦正餐</button>
+        <button type="button" class="quick-chip" data-prompt="幫我配一組正餐＋點心或手搖飲">🍡 幫我配一組</button>
         <button type="button" class="quick-chip" data-prompt="哪幾家店週日沒開？">📅 週日公休</button>
       </div>
 
@@ -285,18 +310,36 @@
       </form>
     </div>
 
-    <!-- 卡通笑臉浮動按鈕 -->
+    <!-- 可愛小姐微微笑浮動按鈕 -->
     <button type="button" class="smiley-launcher" id="smileyLauncher" aria-label="開啟午餐小客服" title="點我開啟午餐小客服">
-      <svg class="smiley-face-svg" viewBox="0 0 80 80" width="64" height="64" aria-hidden="true">
-        <circle cx="40" cy="40" r="35" fill="#FFE066" stroke="#4A3728" stroke-width="4" />
-        <path d="M22 18 A24 24 0 0 1 42 12" fill="none" stroke="#FFF9DB" stroke-width="4" stroke-linecap="round" />
-        <ellipse cx="28" cy="32" rx="4" ry="5" fill="#4A3728" />
-        <ellipse cx="52" cy="32" rx="4" ry="5" fill="#4A3728" />
-        <circle cx="29.4" cy="30.2" r="1.4" fill="#FFFFFF" />
-        <circle cx="53.4" cy="30.2" r="1.4" fill="#FFFFFF" />
-        <ellipse cx="20" cy="41" rx="5.5" ry="3.4" fill="#FF9E9E" opacity="0.85" />
-        <ellipse cx="60" cy="41" rx="5.5" ry="3.4" fill="#FF9E9E" opacity="0.85" />
-        <path d="M25 44 Q40 59 55 44" fill="none" stroke="#4A3728" stroke-width="4.2" stroke-linecap="round" />
+      <svg class="smiley-face-svg" viewBox="0 0 80 80" width="66" height="66" aria-hidden="true">
+        <defs>
+          <clipPath id="girlAvatarClip">
+            <circle cx="40" cy="40" r="33.5" />
+          </clipPath>
+        </defs>
+        <circle cx="40" cy="40" r="35" fill="#FFE9DC" />
+        <g clip-path="url(#girlAvatarClip)">
+          <path d="M16 44 C15 21, 25 11, 40 11 C55 11, 65 21, 64 44 C64 56, 59 64, 53 68 L27 68 C21 64, 16 56, 16 44 Z" fill="#6D4735" />
+          <path d="M20 75 C21 61, 30 57, 40 57 C50 57, 59 61, 60 75 Z" fill="#FF8C73" />
+          <path d="M32 57 L40 65 L48 57 Q40 59 32 57 Z" fill="#FFFFFF" />
+          <rect x="36" y="51" width="8" height="8" rx="3" fill="#FFE5D0" />
+          <circle cx="22.5" cy="40" r="3.4" fill="#FFE5D0" />
+          <circle cx="57.5" cy="40" r="3.4" fill="#FFE5D0" />
+          <ellipse cx="40" cy="39" rx="16.5" ry="17" fill="#FFE5D0" />
+          <path d="M23 33 C25 21, 32 17, 40 18 C48 17, 55 21, 57 33 C52 27, 46 25, 40 28 C34 25, 28 27, 23 33 Z" fill="#6D4735" />
+          <rect x="48.5" y="21" width="7.5" height="3.2" rx="1.6" transform="rotate(14 52 22.5)" fill="#FF9EB5" />
+          <circle cx="33" cy="37.5" r="2.6" fill="#4A3728" />
+          <circle cx="47" cy="37.5" r="2.6" fill="#4A3728" />
+          <circle cx="33.9" cy="36.6" r="0.9" fill="#FFFFFF" />
+          <circle cx="47.9" cy="36.6" r="0.9" fill="#FFFFFF" />
+          <path d="M29.8 36.2 Q30.8 35.2 32 35.8" fill="none" stroke="#4A3728" stroke-width="1.4" stroke-linecap="round" />
+          <path d="M48 35.8 Q49.2 35.2 50.2 36.2" fill="none" stroke="#4A3728" stroke-width="1.4" stroke-linecap="round" />
+          <ellipse cx="28.5" cy="42.5" rx="3.8" ry="2.1" fill="#FFA4AD" opacity="0.72" />
+          <ellipse cx="51.5" cy="42.5" rx="3.8" ry="2.1" fill="#FFA4AD" opacity="0.72" />
+          <path d="M35.5 45.2 Q40 48.2 44.5 45.2" fill="none" stroke="#4A3728" stroke-width="2.1" stroke-linecap="round" />
+        </g>
+        <circle cx="40" cy="40" r="35" fill="none" stroke="#4A3728" stroke-width="3.2" />
       </svg>
       <span class="launcher-label">小客服</span>
     </button>
