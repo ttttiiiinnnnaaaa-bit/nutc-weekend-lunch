@@ -1,6 +1,8 @@
 (() => {
   'use strict';
 
+  const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbz9EFMKBpM9wNeR1qgEE3f_4te8HQQ3zss7iTTPy_gtmL8c9AckqBg6Z5TKmRwNs7LiiA/exec';
+
   const STORAGE_KEYS = {
     favorites: 'nutc_lunch_favorites_v1',
     comments: 'nutc_lunch_comments_v1',
@@ -24,7 +26,7 @@
     remoteReportedClosed: [],
     remoteComments: {},
     openComments: new Set(),
-    gasUrl: localStorage.getItem(STORAGE_KEYS.gasUrl) || '',
+    gasUrl: (localStorage.getItem(STORAGE_KEYS.gasUrl) || '').trim() || DEFAULT_GAS_URL,
     chatHistory: [],
     isSendingChat: false
   };
@@ -846,20 +848,20 @@
       setSettingsFeedback('網址格式應為 https://script.google.com/macros/s/.../exec', false);
       return;
     }
-    state.gasUrl = val;
-    updateGasStatusUI();
     if (val) {
+      state.gasUrl = val;
       localStorage.setItem(STORAGE_KEYS.gasUrl, val);
-      setSettingsFeedback('儲存中，正在同步資料...', true);
-      const synced = await syncFromGas();
-      if (synced) {
-        setSettingsFeedback('已儲存 GAS 網址並完成同步 ✓', true);
-      } else {
-        setSettingsFeedback('已儲存網址，但同步失敗（請點「測試連線」確認 GAS 權限為所有人）', false);
-      }
     } else {
       localStorage.removeItem(STORAGE_KEYS.gasUrl);
-      setSettingsFeedback('已清除 GAS 網址。', true);
+      state.gasUrl = DEFAULT_GAS_URL;
+    }
+    updateGasStatusUI();
+    setSettingsFeedback('儲存中，正在同步資料...', true);
+    const synced = await syncFromGas();
+    if (synced) {
+      setSettingsFeedback(val ? '已儲存 GAS 網址並完成同步 ✓' : '已恢復使用網站預設 GAS 網址並完成同步 ✓', true);
+    } else {
+      setSettingsFeedback('已儲存網址，但同步失敗（請點「測試連線」確認 GAS 權限為所有人）', false);
     }
   });
 
