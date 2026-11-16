@@ -27,8 +27,7 @@
     remoteComments: {},
     openComments: new Set(),
     gasUrl: DEFAULT_GAS_URL,
-    chatHistory: [],
-    isSendingChat: false
+    lastChatPickedIds: new Set()
   };
 
   const navExplore = document.getElementById('navExplore');
@@ -1021,106 +1020,175 @@ ${strings.map((s) => `<si><t xml:space="preserve">${escapeXml(s)}</t></si>`).joi
     return div;
   }
 
-  function formatChatReplyText(text) {
-    return String(text || '')
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .replace(/^#{1,6}\s*/gm, '')
-      .replace(/^[ \t]+/gm, '')
-      .trim();
+  function parseChatCampus(text) {
+    if (text.includes('一中')) return 'yizhong';
+    if (/第二|二市場/.test(text)) return 'market2';
+    if (/第五|五市場/.test(text)) return 'market5';
+    return state.campus;
   }
 
-  function buildSystemContext() {
-    const campusInfo = CAMPUS_INFO[state.campus];
+  function parseChatDay(text) {
+    if (/週日|星期日|禮拜日|禮拜天/.test(text)) return 'sun';
+    if (/週六|星期六|禮拜六/.test(text)) return 'sat';
+    return state.day;
+  }
+
+  function extractFoodKeywords(text) {
+    const cleaned = text
+      .replace(/一中街|一中|第二市場|二市場|第五市場|五市場|週六|星期六|禮拜六|週日|星期日|禮拜日|禮拜天/g, ' ')
+      .replace(/推薦|目前|區域|與|時段|高評價|評價高|又近的|又近|最近|不要太遠|走比較近|近一點|便宜|省錢|銅板/g, ' ')
+      .replace(/點心飲料|手搖飲|點心|飲料|正餐|主餐|午餐|吃飽|幫我配一組|幫我配|配一組|一組|套餐|搭配/g, ' ')
+      .replace(/\d+\s*(?:元以內|元以下|元內|塊以下|塊以內|元|塊|分鐘內|分鐘|分)/g, ' ')
+      .replace(/有沒有|有什麼|有開嗎|沒開|公休|休息|想要|想吃|想喝|請問|幫我|推薦我|找一下|給我|什麼|可以|吃什麼|喝什麼|哪家|哪幾家|附近|的|嗎|呢|了|吧|呀|喔/g, ' ');
+    return cleaned
+      .split(/[\s,，、。？！?!+＋/]+/)
+      .map((t) => t.trim())
+      .filter((t) => t.length >= 1);
+  }
+
+  function pickVariedStores(candidates, count, preferNear) {
+    if (candidates.length === 0) return [];
+    const sorted = [...candidates].sort((a, b) => {
+      if (preferNear) {
+        if (a.distanceMeters !== b.distanceMeters) return a.distanceMeters - b.distanceMeters;
+        return b.rating - a.rating;
+      }
+      if (b.rating !== a.rating) return b.rating - a.rating;
+      return a.distanceMeters - b.distanceMeters;
+    });
+
+    const pool = sorted.slice(0, Math.min(sorted.length, Math.max(count + 3, 6)));
+    const fresh = pool.filter((s) => !state.lastChatPickedIds.has(s.id));
+    let chosen = fresh.slice(0, count);
+    if (chosen.length < count) {
+      const used = new Set(chosen.map((s) => s.id));
+      for (const s of pool) {
+        if (chosen.length >= count) break;
+        if (!used.has(s.id)) chosen.push(s);
+      }
+    }
+    chosen.forEach((s) => state.lastChatPickedIds.add(s.id));
+    if (state.lastChatPickedIds.size > 18) {
+      state.lastChatPickedIds.clear();
+      chosen.forEach((s) => state.lastChatPickedIds.add(s.id));
+    }
+    return chosen;
+  }
+
+  function formatStoreLine(s, labelPrefix = '') {
+    const highlight = (s.highlights && s.highlights[0]) ? `｜${s.highlights[0]}` : '';
+    return `・${labelPrefix}${s.name}｜${Number(s.rating).toFixed(1)}★｜步行${s.walkMinutes}分｜${s.priceRange}${highlight}`;
+  }
+
+  function generateLocalChatReply(userText) {
+    const campus = parseChatCampus(userText);
+    const day = parseChatDay(userText);
+    const campusInfo = CAMPUS_INFO[campus];
     const campusName = campusInfo.name;
-    const dayName = state.day === 'sat' ? '週六中午' : '週日中午';
+    const dayName = day === 'sat' ? '週六' : '週日';
+
     const reportedSet = getReportedSet();
-    const allStores = getAllStores().filter((s) => !reportedSet.has(s.id));
-    const openStores = allStores.filter((s) => s.campus === state.campus && s.hours[state.day]?.open);
-    const storeLines = openStores
-      .map((s) => {
-        const type = s.category === 'meal' ? '正餐' : s.subCategory === 'snack' ? '點心' : '手搖飲';
-        return `- [${type}] ${s.name}｜${s.priceRange}｜${s.rating}★｜步行${s.walkMinutes}分｜${s.hours[state.day].text}｜${(s.highlights || []).join('、')}`;
-      })
-      .join('\n');
+    const campusStores = getAllStores().filter((s) => !reportedSet.has(s.id) && s.campus === campus);
+    const openStores = campusStores.filter((s) => s.hours[day] && s.hours[day].open);
+    const closedStores = campusStores.filter((s) => !s.hours[day] || !s.hours[day].open);
 
-    const closedToday = allStores
-      .filter((s) => s.campus === state.campus && !s.hours[state.day]?.open)
-      .map((s) => s.name)
-      .join('、');
+    if (/公休|沒開|休息/.test(userText)) {
+      if (closedStores.length === 0) {
+        return `${campusName}${dayName}目前收錄的店家都有營業喔！😊`;
+      }
+      const names = closedStores.map((s) => s.name).join('、');
+      return `${campusName}${dayName}公休的店家有：\n${names}`;
+    }
 
-    return [
-      '你是「中科大午餐小客服」，用繁體中文回覆，語氣像親切熱情的朋友。',
-      '【回覆規則】\n1. 簡潔精準：每次回覆控制在 3 句、約 70～110 字以內，直接給重點，不要長篇大論。\n2. 推薦精選：推薦時最多挑 2～3 間最適合的就好，每間一句「・店名｜步行幾分｜價位｜小亮點」。\n3. 禁止使用 Markdown 符號（不要寫 ** 或 ##），開頭不要空兩格。',
-      `目前瀏覽：${campusName}（從${campusInfo.originLabel}出發），時段：${dayName}。`,
-      `${campusName}${dayName}有營業：\n${storeLines}`,
-      closedToday ? `${dayName}公休：${closedToday}` : ''
-    ]
-      .filter(Boolean)
-      .join('\n\n');
+    const budgetMatch = userText.match(/(\d{2,3})\s*(?:元|塊|以內|以下|內)/);
+    const maxBudget = budgetMatch ? Number(budgetMatch[1]) : null;
+    const walkMatch = userText.match(/(\d{1,2})\s*分/);
+    const maxWalk = walkMatch ? Number(walkMatch[1]) : null;
+    const preferCheap = /便宜|省錢|銅板|平價/.test(userText);
+    const preferNear = /近|最近|懶得走|快/.test(userText);
+
+    let pool = openStores.filter((s) => {
+      if (maxBudget !== null && s.maxPrice > maxBudget) return false;
+      if (maxWalk !== null && s.walkMinutes > maxWalk) return false;
+      return true;
+    });
+
+    if (preferCheap && maxBudget === null) {
+      const cheap = pool.filter((s) => s.maxPrice <= 100);
+      if (cheap.length > 0) pool = cheap;
+    }
+
+    if (pool.length === 0) {
+      const fallback = pickVariedStores(openStores, 2, preferNear);
+      return `在${campusName}${dayName}剛好沒找到完全符合條件的店，改推這幾間給你參考：\n${fallback.map((s) => formatStoreLine(s)).join('\n')}`;
+    }
+
+    const isCombo = /幫我配|一組|套餐|搭配/.test(userText);
+    if (isCombo) {
+      const meals = pool.filter((s) => s.category === 'meal');
+      const snacks = pool.filter((s) => s.category === 'snackdrink');
+      const [meal] = pickVariedStores(meals.length > 0 ? meals : openStores.filter((s) => s.category === 'meal'), 1, preferNear);
+      const [snack] = pickVariedStores(snacks.length > 0 ? snacks : openStores.filter((s) => s.category === 'snackdrink'), 1, preferNear);
+      if (meal && snack) {
+        return `${campusName}${dayName}幫你配好一組：\n${formatStoreLine(meal, '正餐：')}\n${formatStoreLine(snack, '點心/飲品：')}`;
+      }
+    }
+
+    const wantsMeal = /正餐|吃飽|主餐|午餐|便當/.test(userText);
+    const wantsSnackDrink = /點心|飲料|手搖|喝/.test(userText);
+    const wantsOnlyDrink = !wantsMeal && /飲料|手搖|喝/.test(userText) && !/點心/.test(userText);
+    const wantsOnlySnack = !wantsMeal && /點心/.test(userText) && !/飲料|手搖|喝/.test(userText);
+
+    const keywords = extractFoodKeywords(userText);
+    let keywordHits = [];
+    if (keywords.length > 0) {
+      keywordHits = pool.filter((s) => {
+        const hay = `${s.name} ${(s.highlights || []).join(' ')}`.toLowerCase();
+        return keywords.some((kw) => hay.includes(kw.toLowerCase()));
+      });
+    }
+
+    if (keywords.length > 0 && keywordHits.length > 0) {
+      const picked = pickVariedStores(keywordHits, 3, preferNear);
+      return `${campusName}${dayName}幫你找到這幾間：\n${picked.map((s) => formatStoreLine(s)).join('\n')}`;
+    }
+
+    if (wantsMeal && !wantsSnackDrink) {
+      const mealPool = pool.filter((s) => s.category === 'meal');
+      const picked = pickVariedStores(mealPool, 3, preferNear);
+      if (picked.length > 0) {
+        return `${campusName}${dayName} 150 元內正餐推薦這幾間：\n${picked.map((s) => formatStoreLine(s)).join('\n')}`;
+      }
+    }
+
+    if (wantsSnackDrink && !wantsMeal) {
+      let sdPool = pool.filter((s) => s.category === 'snackdrink');
+      if (wantsOnlyDrink) {
+        const drinks = sdPool.filter((s) => s.subCategory === 'drink');
+        if (drinks.length > 0) sdPool = drinks;
+      } else if (wantsOnlySnack) {
+        const snacks = sdPool.filter((s) => s.subCategory === 'snack');
+        if (snacks.length > 0) sdPool = snacks;
+      }
+      const picked = pickVariedStores(sdPool, 3, preferNear);
+      if (picked.length > 0) {
+        return `${campusName}${dayName}點心與飲料推薦這幾間：\n${picked.map((s) => formatStoreLine(s)).join('\n')}`;
+      }
+    }
+
+    const picked = pickVariedStores(pool, 3, preferNear);
+    if (keywords.length > 0 && keywordHits.length === 0) {
+      return `在${campusName}${dayName}暫時沒有「${keywords.join('、')}」，改推薦這幾間高人氣給你：\n${picked.map((s) => formatStoreLine(s)).join('\n')}`;
+    }
+    return `${campusName}${dayName}精選推薦這幾間給你參考：\n${picked.map((s) => formatStoreLine(s)).join('\n')}`;
   }
 
-  async function sendChatPrompt(userText) {
+  function sendChatPrompt(userText) {
     const trimmed = userText.trim();
-    if (!trimmed || state.isSendingChat) return;
-
-    if (!state.gasUrl) {
-      appendChatMessage('user', trimmed);
-      appendChatMessage('bot', '目前小客服暫時無法連線，請稍後再試喔 😊');
-      return;
-    }
-
-    state.isSendingChat = true;
-    chatSendBtn.disabled = true;
+    if (!trimmed) return;
     appendChatMessage('user', trimmed);
-    const loadingEl = appendChatMessage('bot', '小客服思考中...', true);
-
-    const nextMessages = [...state.chatHistory, { role: 'user', content: trimmed }];
-
-    try {
-      const res = await fetch(state.gasUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8'
-        },
-        redirect: 'follow',
-        body: JSON.stringify({
-          action: 'chat',
-          messages: nextMessages,
-          systemContext: buildSystemContext()
-        })
-      });
-
-      const rawText = await res.text();
-      let data;
-      try {
-        data = JSON.parse(rawText);
-      } catch {
-        throw new Error(`GAS 回傳非 JSON 格式：${rawText.slice(0, 120)}`);
-      }
-
-      if (!data.ok || !data.message) {
-        throw new Error(data.error || 'OpenRouter API 回傳失敗');
-      }
-
-      const assistantMsg = {
-        role: 'assistant',
-        content: data.message.content || ''
-      };
-      if (data.message.reasoning_details !== undefined) {
-        assistantMsg.reasoning_details = data.message.reasoning_details;
-      }
-
-      state.chatHistory = [...nextMessages, assistantMsg];
-      loadingEl.classList.remove('loading');
-      loadingEl.textContent = formatChatReplyText(assistantMsg.content) || '（AI 未回傳文字內容）';
-    } catch (err) {
-      loadingEl.classList.remove('loading');
-      loadingEl.textContent = `連線失敗：${err.message}\n請確認 GAS 網址正確且部署權限為「所有人」。`;
-    } finally {
-      state.isSendingChat = false;
-      chatSendBtn.disabled = false;
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
+    const reply = generateLocalChatReply(trimmed);
+    appendChatMessage('bot', reply);
   }
 
   smileyLauncher.addEventListener('click', () => {
