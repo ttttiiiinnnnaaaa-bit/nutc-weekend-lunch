@@ -1038,7 +1038,7 @@ ${strings.map((s) => `<si><t xml:space="preserve">${escapeXml(s)}</t></si>`).joi
       .replace(/一中街|一中|第二市場|二市場|第五市場|五市場|週六|星期六|禮拜六|週日|星期日|禮拜日|禮拜天/g, ' ')
       .replace(/推薦|目前|區域|與|時段|高評價|評價高|又近的|又近|最近|不要太遠|走比較近|近一點|便宜|省錢|銅板/g, ' ')
       .replace(/點心飲料|手搖飲|點心|飲料|正餐|主餐|午餐|吃飽|幫我配一組|幫我配|配一組|一組|套餐|搭配/g, ' ')
-      .replace(/\d+\s*(?:元以內|元以下|元內|塊以下|塊以內|元|塊|分鐘內|分鐘|分)/g, ' ')
+      .replace(/\d+\s*(?:分鐘?(?:以內|以下|內)?|(?:元|塊)?(?:以內|以下|內)|元|塊)/g, ' ')
       .replace(/有沒有|有什麼|有開嗎|沒開|公休|休息|想要|想吃|想喝|請問|幫我|推薦我|找一下|給我|什麼|可以|吃什麼|喝什麼|哪家|哪幾家|附近|的|嗎|呢|了|吧|呀|喔/g, ' ');
     return cleaned
       .split(/[\s,，、。？！?!+＋/]+/)
@@ -1180,7 +1180,11 @@ ${strings.map((s) => `<si><t xml:space="preserve">${escapeXml(s)}</t></si>`).joi
     if (keywords.length > 0 && keywordHits.length === 0) {
       return `在${campusName}${dayName}暫時沒有「${keywords.join('、')}」，改推薦這幾間高人氣給你：\n${picked.map((s) => formatStoreLine(s)).join('\n')}`;
     }
-    return `${campusName}${dayName}精選推薦這幾間給你參考：\n${picked.map((s) => formatStoreLine(s)).join('\n')}`;
+    const filterNotes = [];
+    if (maxBudget !== null) filterNotes.push(`${maxBudget}元內`);
+    if (maxWalk !== null) filterNotes.push(`步行${maxWalk}分內`);
+    const noteText = filterNotes.length > 0 ? `（${filterNotes.join('、')}）` : '';
+    return `${campusName}${dayName}${noteText}推薦這幾間給你參考：\n${picked.map((s) => formatStoreLine(s)).join('\n')}`;
   }
 
   function sendChatPrompt(userText) {
