@@ -38,23 +38,6 @@ const CAMPUS_INFO = {
 const STORES = [
   // ==================== 一中街：150元內正餐（從三民校區步行計算） ====================
   {
-    id: 'yz-meal-2',
-    campus: 'yizhong',
-    category: 'meal',
-    name: '食初 - 職人雞肉飯 一中店',
-    address: '臺中市北區三民路三段126巷3號1F',
-    distanceMeters: 120,
-    walkMinutes: 2,
-    rating: 4.6,
-    priceRange: '$65–$115',
-    maxPrice: 115,
-    highlights: ['炸蛋雞魯飯', '椒麻滷肉飯'],
-    hours: {
-      sat: { open: true, text: '11:00–19:20' },
-      sun: { open: true, text: '11:00–19:20' }
-    }
-  },
-  {
     id: 'yz-meal-3',
     campus: 'yizhong',
     category: 'meal',
@@ -89,54 +72,20 @@ const STORES = [
     }
   },
   {
-    id: 'yz-meal-6',
+    id: 'yz-meal-2',
     campus: 'yizhong',
     category: 'meal',
-    name: '阿堂豬肉麵線',
-    address: '臺中市北區一中街23-1號',
-    distanceMeters: 280,
-    walkMinutes: 4,
-    rating: 4.5,
-    priceRange: '$50–$80',
-    maxPrice: 80,
-    highlights: ['柴魚清湯麵線', '嫩滷大腸'],
+    name: '食初 - 職人雞肉飯 一中店',
+    address: '臺中市北區三民路三段126巷3號1F',
+    distanceMeters: 120,
+    walkMinutes: 2,
+    rating: 4.6,
+    priceRange: '$65–$115',
+    maxPrice: 115,
+    highlights: ['炸蛋雞魯飯', '椒麻滷肉飯'],
     hours: {
-      sat: { open: true, text: '11:00–20:00（依現場為主）' },
-      sun: { open: true, text: '11:00–20:00（依現場為主）' }
-    }
-  },
-  {
-    id: 'yz-meal-7',
-    campus: 'yizhong',
-    category: 'meal',
-    name: '忠武海苔飯捲便當',
-    address: '臺中市北區育才南街37號',
-    distanceMeters: 310,
-    walkMinutes: 4,
-    rating: 4.2,
-    priceRange: '$85–$130',
-    maxPrice: 130,
-    highlights: ['海苔飯捲', '韓式拌飯'],
-    hours: {
-      sat: { open: true, text: '11:00–14:00' },
-      sun: { open: false, text: '週日公休' }
-    }
-  },
-  {
-    id: 'yz-meal-8',
-    campus: 'yizhong',
-    category: 'meal',
-    name: '茶罐子',
-    address: '臺中市北區錦新街72號',
-    distanceMeters: 360,
-    walkMinutes: 5,
-    rating: 3.9,
-    priceRange: '$85–$120',
-    maxPrice: 120,
-    highlights: ['平價主菜便當', '配菜清爽'],
-    hours: {
-      sat: { open: true, text: '11:00–18:00' },
-      sun: { open: false, text: '週日公休' }
+      sat: { open: true, text: '11:00–19:20' },
+      sun: { open: true, text: '11:00–19:20' }
     }
   },
   {
@@ -154,6 +103,23 @@ const STORES = [
     hours: {
       sat: { open: true, text: '10:30–19:30' },
       sun: { open: true, text: '10:30–19:30' }
+    }
+  },
+  {
+    id: 'yz-meal-7',
+    campus: 'yizhong',
+    category: 'meal',
+    name: '忠武海苔飯捲便當',
+    address: '臺中市北區育才南街37號',
+    distanceMeters: 310,
+    walkMinutes: 4,
+    rating: 4.2,
+    priceRange: '$85–$130',
+    maxPrice: 130,
+    highlights: ['海苔飯捲', '韓式拌飯'],
+    hours: {
+      sat: { open: true, text: '11:00–21:00' },
+      sun: { open: true, text: '11:00–21:00' }
     }
   },
   {
@@ -191,20 +157,38 @@ const STORES = [
     }
   },
   {
-    id: 'yz-meal-1',
+    id: 'yz-meal-13',
     campus: 'yizhong',
     category: 'meal',
-    name: '八方雲集 台中雙十店',
-    address: '臺中市北區雙十路二段47-5號',
-    distanceMeters: 560,
-    walkMinutes: 7,
-    rating: 3.8,
-    priceRange: '$65–$135',
-    maxPrice: 135,
-    highlights: ['招牌鍋貼', '玉米濃湯'],
+    name: '頂吉古早味火雞肉飯',
+    address: '臺中市中區三民路三段57號',
+    distanceMeters: 600,
+    walkMinutes: 8,
+    rating: 4.0,
+    priceRange: '$50–$75',
+    maxPrice: 75,
+    highlights: ['火雞肉飯', '火雞片肉飯'],
     hours: {
-      sat: { open: true, text: '11:30–19:00' },
-      sun: { open: true, text: '11:30–19:00' }
+      sat: { open: true, text: '10:30–15:30' },
+      sun: { open: false, text: '週日休息' }
+    },
+    mapsUrl: 'https://maps.app.goo.gl/r79pk4ai5cK8LfFx9'
+  },
+  {
+    id: 'yz-meal-8',
+    campus: 'yizhong',
+    category: 'meal',
+    name: '茶罐子',
+    address: '臺中市北區錦新街72號',
+    distanceMeters: 360,
+    walkMinutes: 5,
+    rating: 3.9,
+    priceRange: '$85–$120',
+    maxPrice: 120,
+    highlights: ['平價主菜便當', '配菜清爽'],
+    hours: {
+      sat: { open: true, text: '11:00–18:00' },
+      sun: { open: false, text: '週日公休' }
     }
   },
   {
@@ -224,24 +208,6 @@ const STORES = [
       sun: { open: true, text: '11:00–21:00' }
     }
   },
-  {
-    id: 'yz-meal-12',
-    campus: 'yizhong',
-    category: 'meal',
-    name: '王印製麵麻辣乾麵',
-    address: '臺中市北區太平路65-1號',
-    distanceMeters: 350,
-    walkMinutes: 5,
-    rating: 2.9,
-    priceRange: '$50–$100',
-    maxPrice: 100,
-    highlights: ['麻辣乾麵', '麻醬麵'],
-    hours: {
-      sat: { open: true, text: '11:00–21:30' },
-      sun: { open: true, text: '11:00–21:30' }
-    }
-  },
-
   // ==================== 一中街：點心＋手搖飲（從三民校區步行計算） ====================
   {
     id: 'yz-sd-3',
@@ -259,6 +225,24 @@ const STORES = [
     hours: {
       sat: { open: true, text: '12:00–23:00' },
       sun: { open: true, text: '12:00–23:00' }
+    }
+  },
+  {
+    id: 'yz-sd-13',
+    campus: 'yizhong',
+    category: 'snackdrink',
+    subCategory: 'drink',
+    name: '御私藏鮮奶茶專賣店-台中一中店',
+    address: '臺中市北區太平路50號',
+    distanceMeters: 300,
+    walkMinutes: 4,
+    rating: 4.8,
+    priceRange: '$45–$80',
+    maxPrice: 80,
+    highlights: ['炙燒布蕾黑龍奶茶', '肉肉珍珠奶茶'],
+    hours: {
+      sat: { open: true, text: '10:30–02:00' },
+      sun: { open: true, text: '10:30–02:00' }
     }
   },
   {
@@ -280,6 +264,60 @@ const STORES = [
     }
   },
   {
+    id: 'yz-sd-16',
+    campus: 'yizhong',
+    category: 'snackdrink',
+    subCategory: 'drink',
+    name: '季緣 CHI YUAN | 一中店 | Premium Taiwanese Tea',
+    address: '臺中市北區三民路三段114號1樓',
+    distanceMeters: 99,
+    walkMinutes: 1,
+    rating: 4.6,
+    priceRange: '$40–$90',
+    maxPrice: 90,
+    highlights: ['蓮霧茶王', '水蜜桃茶王'],
+    hours: {
+      sat: { open: true, text: '10:30–22:00' },
+      sun: { open: true, text: '10:30–21:00' }
+    }
+  },
+  {
+    id: 'yz-sd-14',
+    campus: 'yizhong',
+    category: 'snackdrink',
+    subCategory: 'drink',
+    name: '青山-青茶專業製作 台中一中店',
+    address: '臺中市北區太平路36-1號',
+    distanceMeters: 350,
+    walkMinutes: 5,
+    rating: 4.5,
+    priceRange: '$30–$70',
+    maxPrice: 70,
+    highlights: ['青山青茶', '菜燕冬瓜茶'],
+    hours: {
+      sat: { open: true, text: '10:00–23:00' },
+      sun: { open: true, text: '10:00–22:30' }
+    }
+  },
+  {
+    id: 'yz-sd-15',
+    campus: 'yizhong',
+    category: 'snackdrink',
+    subCategory: 'drink',
+    name: '克萊茵紅茶',
+    address: '臺中市北區一中街83號',
+    distanceMeters: 230,
+    walkMinutes: 3,
+    rating: 4.5,
+    priceRange: '$30–$65',
+    maxPrice: 65,
+    highlights: ['克萊茵紅茶', '焦糖鮮奶茶'],
+    hours: {
+      sat: { open: true, text: '11:00–22:30' },
+      sun: { open: true, text: '11:00–22:30' }
+    }
+  },
+  {
     id: 'yz-sd-5',
     campus: 'yizhong',
     category: 'snackdrink',
@@ -293,26 +331,8 @@ const STORES = [
     maxPrice: 70,
     highlights: ['綿密綠豆沙牛乳', '珍珠紅豆沙'],
     hours: {
-      sat: { open: true, text: '12:00–22:00' },
-      sun: { open: true, text: '12:00–22:00' }
-    }
-  },
-  {
-    id: 'yz-sd-8',
-    campus: 'yizhong',
-    category: 'snackdrink',
-    subCategory: 'drink',
-    name: '多多茶坊',
-    address: '臺中市北區尊賢街38號',
-    distanceMeters: 370,
-    walkMinutes: 5,
-    rating: 4.0,
-    priceRange: '$25–$50',
-    maxPrice: 50,
-    highlights: ['隱藏版核廢料', '銅板手搖飲'],
-    hours: {
-      sat: { open: true, text: '10:30–22:00' },
-      sun: { open: true, text: '10:30–22:00' }
+      sat: { open: true, text: '10:00–22:00' },
+      sun: { open: true, text: '10:00–22:00' }
     }
   },
   {
@@ -441,60 +461,7 @@ const STORES = [
       sun: { open: true, text: '10:00–22:00' }
     }
   },
-  {
-    id: 'yz-sd-7',
-    campus: 'yizhong',
-    category: 'snackdrink',
-    subCategory: 'drink',
-    name: '50嵐 一中店',
-    address: '臺中市北區育才街8-2號',
-    distanceMeters: 250,
-    walkMinutes: 3,
-    rating: 2.1,
-    priceRange: '$35–$65',
-    maxPrice: 65,
-    highlights: ['四季春珍波椰', '紅茶瑪奇朵'],
-    hours: {
-      sat: { open: true, text: '10:00–23:00' },
-      sun: { open: true, text: '10:00–23:00' }
-    }
-  },
-
   // ==================== 第二市場：150元內正餐（從民生校區步行計算） ====================
-  {
-    id: 'm2-meal-1',
-    campus: 'market2',
-    category: 'meal',
-    name: '越南法國麵包工藝',
-    address: '臺中市中區臺灣大道一段338號',
-    distanceMeters: 520,
-    walkMinutes: 8,
-    rating: 4.4,
-    priceRange: '$75–$120',
-    maxPrice: 120,
-    highlights: ['招牌綜合夾心', '蒜味奶油脆餅'],
-    hours: {
-      sat: { open: true, text: '08:00–19:00' },
-      sun: { open: true, text: '08:00–19:00' }
-    }
-  },
-  {
-    id: 'm2-meal-2',
-    campus: 'market2',
-    category: 'meal',
-    name: '承記米苔目',
-    address: '臺中市中區三民路二段87號（第二市場）',
-    distanceMeters: 460,
-    walkMinutes: 7,
-    rating: 4.3,
-    priceRange: '$45–$85',
-    maxPrice: 85,
-    highlights: ['古早味肉燥米苔目', '乾意麵湯麵'],
-    hours: {
-      sat: { open: true, text: '07:30–13:30' },
-      sun: { open: true, text: '07:30–13:30' }
-    }
-  },
   {
     id: 'm2-meal-5',
     campus: 'market2',
@@ -513,20 +480,20 @@ const STORES = [
     }
   },
   {
-    id: 'm2-meal-3',
+    id: 'm2-meal-8',
     campus: 'market2',
     category: 'meal',
-    name: '立偉麵食',
-    address: '臺中市中區三民路二段87號攤位175',
-    distanceMeters: 455,
+    name: '阿棋 三代福州意麵老店',
+    address: '臺中市中區三民路二段1之7號',
+    distanceMeters: 445,
     walkMinutes: 7,
-    rating: 3.2,
-    priceRange: '$45–$100',
-    maxPrice: 100,
-    highlights: ['一麵三吃麻醬麵', '花生麻醬自加'],
+    rating: 4.1,
+    priceRange: '$50–$110',
+    maxPrice: 110,
+    highlights: ['手工乾意麵', '綜合魚丸湯'],
     hours: {
-      sat: { open: true, text: '09:00–15:00' },
-      sun: { open: true, text: '09:00–15:00' }
+      sat: { open: true, text: '10:30–17:00' },
+      sun: { open: true, text: '10:30–17:00' }
     }
   },
   {
@@ -542,8 +509,8 @@ const STORES = [
     maxPrice: 110,
     highlights: ['百年老店肉丸', '餛飩意麵'],
     hours: {
-      sat: { open: true, text: '10:30–19:00' },
-      sun: { open: true, text: '10:30–19:00' }
+      sat: { open: true, text: '11:00–18:30' },
+      sun: { open: true, text: '11:00–18:30' }
     }
   },
   {
@@ -561,23 +528,6 @@ const STORES = [
     hours: {
       sat: { open: true, text: '07:00–18:00' },
       sun: { open: true, text: '07:00–18:00' }
-    }
-  },
-  {
-    id: 'm2-meal-8',
-    campus: 'market2',
-    category: 'meal',
-    name: '阿棋 三代福州意麵老店',
-    address: '臺中市中區三民路二段1之7號',
-    distanceMeters: 445,
-    walkMinutes: 7,
-    rating: 4.1,
-    priceRange: '$50–$110',
-    maxPrice: 110,
-    highlights: ['手工乾意麵', '綜合魚丸湯'],
-    hours: {
-      sat: { open: true, text: '08:30–17:30' },
-      sun: { open: true, text: '08:30–17:30' }
     }
   },
   {
@@ -610,8 +560,8 @@ const STORES = [
     maxPrice: 90,
     highlights: ['菜頭粿加蛋', '糯米腸三樣套餐'],
     hours: {
-      sat: { open: true, text: '06:30–18:00' },
-      sun: { open: true, text: '06:30–18:00' }
+      sat: { open: true, text: '06:20–18:00' },
+      sun: { open: true, text: '06:20–18:00' }
     }
   },
   {
@@ -627,11 +577,27 @@ const STORES = [
     maxPrice: 110,
     highlights: ['筍丁鮮肉包', '傳統餛飩湯'],
     hours: {
-      sat: { open: true, text: '08:00–17:30' },
-      sun: { open: true, text: '08:00–17:30' }
+      sat: { open: true, text: '08:00–17:00' },
+      sun: { open: true, text: '08:00–17:00' }
     }
   },
-
+  {
+    id: 'm2-meal-3',
+    campus: 'market2',
+    category: 'meal',
+    name: '立偉麵食',
+    address: '臺中市中區三民路二段87號攤位175',
+    distanceMeters: 455,
+    walkMinutes: 7,
+    rating: 3.2,
+    priceRange: '$45–$100',
+    maxPrice: 100,
+    highlights: ['一麵三吃麻醬麵', '花生麻醬自加'],
+    hours: {
+      sat: { open: true, text: '07:00–15:00' },
+      sun: { open: true, text: '07:00–15:00' }
+    }
+  },
   // ==================== 第二市場：點心＋手搖飲（從民生校區步行計算） ====================
   {
     id: 'm2-sd-1',
@@ -647,8 +613,8 @@ const STORES = [
     maxPrice: 85,
     highlights: ['珍珠紅茶拿鐵', '青檸香茶'],
     hours: {
-      sat: { open: true, text: '10:00–20:00' },
-      sun: { open: true, text: '10:00–20:00' }
+      sat: { open: true, text: '09:00–21:00' },
+      sun: { open: true, text: '09:00–21:00' }
     }
   },
   {
@@ -665,62 +631,44 @@ const STORES = [
     maxPrice: 60,
     highlights: ['手洗檸檬愛玉', '酸甜消暑解膩'],
     hours: {
-      sat: { open: true, text: '09:00–18:00' },
-      sun: { open: true, text: '09:00–18:00' }
+      sat: { open: true, text: '09:00–17:00' },
+      sun: { open: true, text: '09:00–17:00' }
     }
   },
   {
-    id: 'm2-sd-3',
+    id: 'm2-sd-11',
     campus: 'market2',
     category: 'snackdrink',
     subCategory: 'snack',
-    name: '天天饅頭',
-    address: '臺中市中區台灣大道一段336巷',
-    distanceMeters: 510,
-    walkMinutes: 8,
-    rating: 4.4,
-    priceRange: '$6–$60',
-    maxPrice: 60,
-    highlights: ['現炸紅豆小饅頭', '銅板古早點心'],
+    name: '長山行豆花',
+    address: '臺中市中區三民路二段87號（第二市場內14號攤位）',
+    distanceMeters: 450,
+    walkMinutes: 6,
+    rating: 4.5,
+    priceRange: '$50–$90',
+    maxPrice: 90,
+    highlights: ['鹽滷綜合豆花', '手作三色芋圓'],
     hours: {
-      sat: { open: true, text: '09:00–18:00' },
-      sun: { open: true, text: '09:00–18:00' }
+      sat: { open: true, text: '10:00–18:00' },
+      sun: { open: true, text: '10:00–18:00' }
     }
   },
   {
-    id: 'm2-sd-4',
-    campus: 'market2',
-    category: 'snackdrink',
-    subCategory: 'snack',
-    name: '鄒氏餡餅蔥油餅',
-    address: '臺中市中區三民路二段（第二市場外側）',
-    distanceMeters: 445,
-    walkMinutes: 7,
-    rating: 4.0,
-    priceRange: '$35–$70',
-    maxPrice: 70,
-    highlights: ['爆汁牛肉餡餅', '香酥蔥油餅'],
-    hours: {
-      sat: { open: true, text: '12:00–18:00' },
-      sun: { open: true, text: '12:00–18:00' }
-    }
-  },
-  {
-    id: 'm2-sd-5',
+    id: 'm2-sd-10',
     campus: 'market2',
     category: 'snackdrink',
     subCategory: 'drink',
-    name: '旺咖啡 ONE coffee',
-    address: '臺中市中區三民路二段85號（第二市場1-11號攤）',
-    distanceMeters: 460,
-    walkMinutes: 7,
-    rating: 4.4,
-    priceRange: '$55–$110',
-    maxPrice: 110,
-    highlights: ['市場手沖單品', '拿鐵冰咖啡'],
+    name: '艾得咖啡三民店',
+    address: '臺中市中區三民路二段79號',
+    distanceMeters: 450,
+    walkMinutes: 6,
+    rating: 4.3,
+    priceRange: '$40–$80',
+    maxPrice: 80,
+    highlights: ['雙Q奶茶', '魔力咖啡'],
     hours: {
-      sat: { open: true, text: '09:00–17:30' },
-      sun: { open: true, text: '09:00–17:30' }
+      sat: { open: true, text: '09:00–16:40' },
+      sun: { open: true, text: '09:00–16:40' }
     }
   },
   {
@@ -760,6 +708,42 @@ const STORES = [
     }
   },
   {
+    id: 'm2-sd-12',
+    campus: 'market2',
+    category: 'snackdrink',
+    subCategory: 'drink',
+    name: '可不可熟成紅茶 第二市場店',
+    address: '臺中市中區三民路二段60號',
+    distanceMeters: 580,
+    walkMinutes: 8,
+    rating: 3.9,
+    priceRange: '$35–$80',
+    maxPrice: 80,
+    highlights: ['熟成紅茶', '白玉歐蕾'],
+    hours: {
+      sat: { open: true, text: '10:00–21:00' },
+      sun: { open: true, text: '10:00–21:00' }
+    }
+  },
+  {
+    id: 'm2-sd-9',
+    campus: 'market2',
+    category: 'snackdrink',
+    subCategory: 'snack',
+    name: '蜜藏地瓜',
+    address: '臺中市中區臺灣大道一段381號',
+    distanceMeters: 560,
+    walkMinutes: 8,
+    rating: 3.8,
+    priceRange: '$50–$100',
+    maxPrice: 100,
+    highlights: ['麥芽蜜地瓜', '古早味甜地瓜'],
+    hours: {
+      sat: { open: true, text: '08:30–14:00' },
+      sun: { open: true, text: '08:30–14:00' }
+    }
+  },
+  {
     id: 'm2-sd-8',
     campus: 'market2',
     category: 'snackdrink',
@@ -777,75 +761,22 @@ const STORES = [
       sun: { open: true, text: '06:30–17:30' }
     }
   },
-  {
-    id: 'm2-sd-9',
-    campus: 'market2',
-    category: 'snackdrink',
-    subCategory: 'snack',
-    name: '蜜藏地瓜',
-    address: '臺中市中區臺灣大道一段381號',
-    distanceMeters: 560,
-    walkMinutes: 8,
-    rating: 3.7,
-    priceRange: '$50–$100',
-    maxPrice: 100,
-    highlights: ['麥芽蜜地瓜', '古早味甜地瓜'],
-    hours: {
-      sat: { open: true, text: '08:00–15:30' },
-      sun: { open: true, text: '08:00–15:30' }
-    }
-  },
-
   // ==================== 第五市場：150元內正餐（從民生校區步行計算） ====================
   {
-    id: 'm5-meal-1',
+    id: 'm5-meal-13',
     campus: 'market5',
     category: 'meal',
-    name: '第五市場素炒麵 芋頭粥',
-    address: '臺中市西區樂群街64號',
-    distanceMeters: 655,
-    walkMinutes: 9,
-    rating: 3.9,
-    priceRange: '$45–$85',
-    maxPrice: 85,
-    highlights: ['古早味素炒麵', '綿密芋頭粥'],
+    name: '阿海麵店',
+    address: '臺中市西區自立街11號',
+    distanceMeters: 380,
+    walkMinutes: 5,
+    rating: 4.5,
+    priceRange: '$40–$100',
+    maxPrice: 100,
+    highlights: ['古早味乾麵', '招牌豬血湯'],
     hours: {
-      sat: { open: true, text: '06:30–13:00' },
-      sun: { open: true, text: '06:30–13:00' }
-    }
-  },
-  {
-    id: 'm5-meal-2',
-    campus: 'market5',
-    category: 'meal',
-    name: '第五市場心緣素食',
-    address: '臺中市西區自治街28號',
-    distanceMeters: 590,
-    walkMinutes: 8,
-    rating: 4.8,
-    priceRange: '$45–$95',
-    maxPrice: 95,
-    highlights: ['自助夾菜飯', '養生素食湯麵'],
-    hours: {
-      sat: { open: true, text: '06:00–13:00' },
-      sun: { open: true, text: '06:00–13:00' }
-    }
-  },
-  {
-    id: 'm5-meal-3',
-    campus: 'market5',
-    category: 'meal',
-    name: '加加麵線糊（原鹿港嘉慶）',
-    address: '臺中市西區樂群街51號',
-    distanceMeters: 630,
-    walkMinutes: 9,
-    rating: 4.4,
-    priceRange: '$50–$95',
-    maxPrice: 95,
-    highlights: ['鹿港赤肉麵線糊', '大腸蚵仔麵線'],
-    hours: {
-      sat: { open: true, text: '06:00–13:00' },
-      sun: { open: true, text: '06:00–13:00' }
+      sat: { open: true, text: '11:00–14:00' },
+      sun: { open: false, text: '週日公休' }
     }
   },
   {
@@ -866,10 +797,44 @@ const STORES = [
     }
   },
   {
+    id: 'm5-meal-14',
+    campus: 'market5',
+    category: 'meal',
+    name: '阿祥麻醬麵豬血湯',
+    address: '臺中市西區樂群街32號',
+    distanceMeters: 580,
+    walkMinutes: 8,
+    rating: 4.3,
+    priceRange: '$40–$90',
+    maxPrice: 90,
+    highlights: ['濃郁麻醬麵', '料滿豬血湯'],
+    hours: {
+      sat: { open: true, text: '06:00–13:00' },
+      sun: { open: true, text: '06:00–13:00' }
+    }
+  },
+  {
+    id: 'm5-meal-16',
+    campus: 'market5',
+    category: 'meal',
+    name: '嘉園小上海點心總匯店',
+    address: '臺中市西區中華路一段8號',
+    distanceMeters: 650,
+    walkMinutes: 9,
+    rating: 4.3,
+    priceRange: '$80–$150',
+    maxPrice: 150,
+    highlights: ['薄皮小籠湯包', '香酥排骨麵'],
+    hours: {
+      sat: { open: true, text: '11:30–14:00' },
+      sun: { open: true, text: '11:30–14:00' }
+    }
+  },
+  {
     id: 'm5-meal-6',
     campus: 'market5',
     category: 'meal',
-    name: '翰德正老牌蚵仔粥（第五市場蚵仔粥）',
+    name: '翰德正老牌蚵仔粥',
     address: '臺中市西區樂群街80號',
     distanceMeters: 680,
     walkMinutes: 9,
@@ -878,8 +843,8 @@ const STORES = [
     maxPrice: 140,
     highlights: ['鮮甜蚵仔粥', '酥炸紅燒肉'],
     hours: {
-      sat: { open: true, text: '09:00–20:00' },
-      sun: { open: true, text: '09:00–20:00' }
+      sat: { open: true, text: '09:00–19:00' },
+      sun: { open: false, text: '週日休息' }
     }
   },
   {
@@ -895,25 +860,8 @@ const STORES = [
     maxPrice: 85,
     highlights: ['蒜泥大腸麵線', '平價早餐炒麵'],
     hours: {
-      sat: { open: true, text: '07:50–13:30' },
-      sun: { open: false, text: '週日公休' }
-    }
-  },
-  {
-    id: 'm5-meal-9',
-    campus: 'market5',
-    category: 'meal',
-    name: '丸東碗粿',
-    address: '臺中市西區樂群街59-2號',
-    distanceMeters: 645,
-    walkMinutes: 9,
-    rating: 4.2,
-    priceRange: '$40–$85',
-    maxPrice: 85,
-    highlights: ['麻豆古早味碗粿', '綜合魚丸湯'],
-    hours: {
-      sat: { open: true, text: '06:00–13:00' },
-      sun: { open: true, text: '06:00–13:00' }
+      sat: { open: true, text: '07:50–13:00' },
+      sun: { open: true, text: '07:50–13:00' }
     }
   },
   {
@@ -980,8 +928,42 @@ const STORES = [
     maxPrice: 125,
     highlights: ['古早味魯排骨', '現炸雞腿飯'],
     hours: {
-      sat: { open: true, text: '11:00–14:00' },
+      sat: { open: true, text: '11:00–13:30' },
       sun: { open: false, text: '週日公休' }
+    }
+  },
+  {
+    id: 'm5-meal-1',
+    campus: 'market5',
+    category: 'meal',
+    name: '第五市場素炒麵 芋頭粥',
+    address: '臺中市西區樂群街64號',
+    distanceMeters: 655,
+    walkMinutes: 9,
+    rating: 3.9,
+    priceRange: '$45–$85',
+    maxPrice: 85,
+    highlights: ['古早味素炒麵', '綿密芋頭粥'],
+    hours: {
+      sat: { open: true, text: '06:30–13:00' },
+      sun: { open: true, text: '06:30–13:00' }
+    }
+  },
+  {
+    id: 'm5-meal-15',
+    campus: 'market5',
+    category: 'meal',
+    name: '向陽樓機器人刀削麵金山店',
+    address: '臺中市西區金山路18號',
+    distanceMeters: 650,
+    walkMinutes: 9,
+    rating: 3.9,
+    priceRange: '$70–$140',
+    maxPrice: 140,
+    highlights: ['機器人刀削麵', '紅燒牛肉麵'],
+    hours: {
+      sat: { open: true, text: '10:30–13:30' },
+      sun: { open: true, text: '10:30–13:30' }
     }
   },
   {
@@ -1001,7 +983,6 @@ const STORES = [
       sun: { open: true, text: '07:30–19:00' }
     }
   },
-
   // ==================== 第五市場：點心＋手搖飲（從民生校區步行計算） ====================
   {
     id: 'm5-sd-2',
@@ -1017,8 +998,26 @@ const STORES = [
     maxPrice: 85,
     highlights: ['木瓜牛奶', '酪梨牛奶'],
     hours: {
-      sat: { open: true, text: '08:00–21:00' },
-      sun: { open: true, text: '08:00–18:00' }
+      sat: { open: true, text: '10:00–19:00' },
+      sun: { open: false, text: '週日休息' }
+    }
+  },
+  {
+    id: 'm5-sd-13',
+    campus: 'market5',
+    category: 'snackdrink',
+    subCategory: 'snack',
+    name: '捲捲捲肉桂捲 第五市場店',
+    address: '臺中市西區樂群街49號',
+    distanceMeters: 580,
+    walkMinutes: 8,
+    rating: 4.6,
+    priceRange: '$65–$120',
+    maxPrice: 120,
+    highlights: ['經典糖霜肉桂捲', '焦糖核桃肉桂捲'],
+    hours: {
+      sat: { open: true, text: '07:30–12:00' },
+      sun: { open: true, text: '07:30–13:00' }
     }
   },
   {
@@ -1036,7 +1035,7 @@ const STORES = [
     highlights: ['古早味麥香鮮奶茶', '現萃冷泡純茶'],
     hours: {
       sat: { open: true, text: '11:00–19:30' },
-      sun: { open: true, text: '11:00–18:30' }
+      sun: { open: true, text: '11:00–19:30' }
     }
   },
   {
@@ -1071,8 +1070,8 @@ const STORES = [
     maxPrice: 85,
     highlights: ['手熬蔗糖鮮奶茶', '冬瓜青茶'],
     hours: {
-      sat: { open: true, text: '09:30–21:00' },
-      sun: { open: true, text: '09:30–21:00' }
+      sat: { open: true, text: '09:00–19:45' },
+      sun: { open: true, text: '09:00–19:45' }
     }
   },
   {
@@ -1162,7 +1161,25 @@ const STORES = [
     highlights: ['手工酸梅冰', '古早味李子冰'],
     hours: {
       sat: { open: true, text: '10:00–18:00' },
-      sun: { open: true, text: '10:00–18:00' }
+      sun: { open: false, text: '週日休息' }
+    }
+  },
+  {
+    id: 'm5-sd-14',
+    campus: 'market5',
+    category: 'snackdrink',
+    subCategory: 'drink',
+    name: '華山藏窖人文茶飲',
+    address: '臺中市西區中華路一段1號',
+    distanceMeters: 520,
+    walkMinutes: 7,
+    rating: 4.1,
+    priceRange: '$35–$85',
+    maxPrice: 85,
+    highlights: ['葡萄樂多多', '古樹油柑香檸茶'],
+    hours: {
+      sat: { open: true, text: '09:30–23:00' },
+      sun: { open: true, text: '09:30–23:00' }
     }
   },
   {
@@ -1172,8 +1189,8 @@ const STORES = [
     subCategory: 'drink',
     name: '一沐日 台中中華店',
     address: '臺中市西區民生路124-1號',
-    distanceMeters: 350,
-    walkMinutes: 5,
+    distanceMeters: 520,
+    walkMinutes: 7,
     rating: 4.0,
     priceRange: '$40–$75',
     maxPrice: 75,
@@ -1190,8 +1207,8 @@ const STORES = [
     subCategory: 'drink',
     name: '茶湯會 台中民生店',
     address: '臺中市西區民生路124-4號',
-    distanceMeters: 360,
-    walkMinutes: 5,
+    distanceMeters: 520,
+    walkMinutes: 7,
     rating: 3.4,
     priceRange: '$40–$80',
     maxPrice: 80,
